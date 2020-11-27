@@ -32,9 +32,9 @@ struct
               if t2 = t1 then
                 (Rationnel(ne1, ne2), Rat)
               else
-                raise (TypeInattendu(t1, t2))
+                raise (TypeInattendu(t2, Int))
             else
-              raise (TypeInattendu(t1, t2))
+              raise (TypeInattendu(t1, Int))
           end
       | AstTds.Numerateur(e1) ->
           begin
@@ -42,7 +42,7 @@ struct
             if t1 = Rat then
               (Numerateur ne1, Int)
             else 
-              raise (TypeInattendu(t1, t1))
+              raise (TypeInattendu(t1, Rat))
           end
       | AstTds.Denominateur(e1) ->
           begin
@@ -50,7 +50,7 @@ struct
             if t1 = Rat then
               (Denominateur ne1, Int)
             else 
-              raise (TypeInattendu(t1, t1))
+              raise (TypeInattendu(t1, Rat))
           end
       | AstTds.Ident(info) ->
           begin
@@ -110,13 +110,15 @@ struct
   
   let rec analyse_type_instruction i =
     match i with 
-      | AstTds.Declaration(t,e,info) -> 
+      | AstTds.Declaration(t, e, info) -> 
         begin
           let (ne, te) = analyse_type_expression e in
-          if te = t then 
-          modifier_type_info t info;
-          (Declaration(ne, info))
-          else raise (TypeInnatendu(t, te))
+          if te = t then
+            begin 
+              modifier_type_info t info;
+              (Declaration(ne, info))
+            end
+          else raise (TypeInattendu(te, t))
         end
       | AstTds.Affectation(e, info) ->
         begin
@@ -125,7 +127,7 @@ struct
             | InfoVar(_, t, _, _) -> 
               begin
                 if t = te then (Affectation(ne, info)) 
-                else raise (TypeInnatendu(t, te))
+                else raise (TypeInattendu(te, t))
               end
             | _ -> failwith "Erreur interne."
         end
@@ -145,30 +147,54 @@ struct
               begin
                 AffichageBool(ne)
               end
+            | _ -> failwith "Type non pris en charge."
         end
       | AstTds.Conditionnelle(c,b1,b2) ->
         begin
           let (nc, tc) = analyse_type_expression c in
-          (** TODO **)
+          if tc = Bool then
+            begin
+              let bt1 = List.map(analyse_type_instruction) b1 in
+              let bt2 = List.map(analyse_type_instruction) b2 in
+              Conditionnelle(nc,bt1,bt2)
+            end
+          else raise (TypeInattendu(tc, Bool))
         end
       | AstTds.TantQue(c,b) ->
         begin
           let (nc, tc) = analyse_type_expression c in
           if tc = Bool then 
-            let bt = List.map(analyse_type_instruction) b in
-            (** TODO **)
-          else raise (TypeInnatendu(tc,))
+            begin
+              let bt = List.map(analyse_type_instruction) b in
+              TantQue(nc,bt)
+            end
+          else raise (TypeInattendu(tc, Bool))
         end
-      | AstTds.Empty() ->
+      | AstTds.Empty ->
         begin
           Empty
         end
   
 
-  let analyse_type_fonction (AstTds.Fonction(t,info,lp,li,e))  = ...
-    (** TODO **)
+  let analyse_type_fonction (AstTds.Fonction(t, info, lp, li, e)) =
+    let (ne, te) = analyse_type_expression e in
+    if te = t then
+      begin
+        modifier_type_info t info;
+        let lpt = List.map(fun (typeinfo, i) ->
+          begin
+            modifier_type_info typeinfo i;
+            info
+          end
+        ) lp in
+        let lit = List.map(analyse_type_instruction) li in
+        Fonction (info, lpt, lit, ne)
+      end
+    else raise (TypeInattendu(te, t))
 
-  let analyser (AstTds.Programme (fonctions, prog)) = ...
-    (** TODO **)
+
+  let analyser (AstTds.Programme(fonctions, prog)) =
+    
+
 
 end
