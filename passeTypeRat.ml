@@ -188,7 +188,7 @@ struct
         let lpt = List.map(fun (typeinfo, i) ->
           begin
             modifier_type_info typeinfo i;
-            info
+            i
           end
         ) lp in
         let lit = List.map(analyse_type_instruction) li in
