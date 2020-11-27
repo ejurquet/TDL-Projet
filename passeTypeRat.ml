@@ -7,6 +7,7 @@ struct
   open Exceptions
   open Ast
   open AstType
+  open Type
 
   type t1 = AstTds.programme
   type t2 = AstType.programme
@@ -17,11 +18,13 @@ struct
           begin
             match info_ast_to_info info with
               | InfoFun(_, typeRet, typeParams) ->
-                let nlet = List.map(fun ei -> analyse_type_expression ei) le in
-                let nle = List.map(fst) nlet in
-                let ltype = List.map(snd) nlet in
-                if ltype = typeParams then (AppelFonction (info, nle), typeRet)
-                else raise (TypesParametresInattendus(typeParams, ltype))
+                begin
+                  let nlet = List.map(fun ei -> analyse_type_expression ei) le in
+                  let nle = List.map(fst) nlet in
+                  let ltype = List.map(snd) nlet in
+                  if (est_compatible_list ltype typeParams) then (AppelFonction (info, nle), typeRet)
+                  else raise (TypesParametresInattendus(typeParams, ltype))
+                end
               | _ -> failwith "Erreur interne."
           end
       | AstTds.Rationnel(e1,e2) ->
@@ -109,7 +112,7 @@ struct
 
   
   let rec analyse_type_instruction i =
-    match i with 
+    match i with
       | AstTds.Declaration(t, e, info) -> 
         begin
           let (ne, te) = analyse_type_expression e in
@@ -180,7 +183,8 @@ struct
     let (ne, te) = analyse_type_expression e in
     if te = t then
       begin
-        modifier_type_info t info;
+        let ltypeparam = List.map(fst) lp in
+        modifier_type_fonction_info t ltypeparam info;
         let lpt = List.map(fun (typeinfo, i) ->
           begin
             modifier_type_info typeinfo i;
@@ -194,7 +198,9 @@ struct
 
 
   let analyser (AstTds.Programme(fonctions, prog)) =
-    
+    let ft= List.map (analyse_type_fonction) fonctions in
+    let pt = List.map (analyse_type_instruction) prog in
+    Programme (ft, pt)
 
 
 end

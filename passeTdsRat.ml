@@ -234,11 +234,11 @@ let analyse_tds_fonction maintds (AstSyntax.Fonction(t,n,lp,li,e))  =
             let ia = info_to_info_ast info in
             ajouter maintds n ia;
             let tdsParam = creerTDSFille maintds in
-                let lptraite = (List.map (fun (typ,nom) -> (typ, ajouterIdTDS tdsParam nom)) lp) in
-                    let tdsBloc = creerTDSFille tdsParam in
-                        let litraite = (List.map (analyse_tds_instruction tdsBloc) li) in
-                            let etraite = analyse_tds_expression tdsBloc e in
-                                Fonction(t,ia,lptraite,litraite,etraite)
+            let lptraite = (List.map (fun (typ,nom) -> (typ, ajouterIdTDS tdsParam nom)) lp) in
+            let tdsBloc = creerTDSFille tdsParam in
+            let litraite = (List.map (analyse_tds_instruction tdsBloc) li) in
+            let etraite = analyse_tds_expression tdsBloc e in
+            Fonction(t,ia,lptraite,litraite,etraite)
           end
         | Some _ ->raise (DoubleDeclaration n)
 
