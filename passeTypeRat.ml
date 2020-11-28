@@ -180,18 +180,18 @@ struct
   
 
   let analyse_type_fonction (AstTds.Fonction(t, info, lp, li, e)) =
+    let ltypeparam = List.map(fst) lp in
+    modifier_type_fonction_info t ltypeparam info;
+    let lpt = List.map(fun (typeinfo, i) ->
+    begin
+      modifier_type_info typeinfo i;
+      i
+    end
+    ) lp in
+    let lit = List.map(analyse_type_instruction) li in
     let (ne, te) = analyse_type_expression e in
     if te = t then
       begin
-        let ltypeparam = List.map(fst) lp in
-        modifier_type_fonction_info t ltypeparam info;
-        let lpt = List.map(fun (typeinfo, i) ->
-          begin
-            modifier_type_info typeinfo i;
-            i
-          end
-        ) lp in
-        let lit = List.map(analyse_type_instruction) li in
         Fonction (info, lpt, lit, ne)
       end
     else raise (TypeInattendu(te, t))
