@@ -202,5 +202,4 @@ struct
     let pt = List.map (analyse_type_instruction) prog in
     Programme (ft, pt)
 
-
 end
