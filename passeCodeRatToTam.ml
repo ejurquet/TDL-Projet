@@ -3,15 +3,14 @@ module PasseCodeRatToTam : Passe.Passe with type t1 = Ast.AstPlacement.programme
 struct
 
   open Tds
-  open Exceptions
   open Ast
   open AstType
   open AstPlacement
   open Type
-  open Load
+  open Code
 
   type t1 = AstPlacement.programme
-  type t2 = String.string
+  type t2 = string
 
   (* expression -> string *)
   (* Produit le code correspondant à l'instruction. L’exécution de ce code laissera
@@ -24,7 +23,7 @@ struct
             | InfoFun(n, _, _) ->
               begin
                 let gen = List.fold_right (fun t qt -> (analyse_code_expression t) ^ qt ) le "" in
-                gen ^ "CALL (ST)" ^ n
+                gen ^ "CALL (SB)" ^ n ^ "\n"
               end
             | _ -> failwith "Erreur interne."
         end
@@ -37,8 +36,8 @@ struct
       | Ident info ->
         begin
           match (info_ast_to_info info) with
-            | InfoVar(t, dep, reg) -> "LOAD (" ^ (string_of_int (getTaille t)) ^ ") " ^ (string_of_int dep) ^ "[" ^ reg ^ "]\n"
-            | InfoConst(v) -> "LOADL" ^ (string_of_int v) ^ "\n"
+            | InfoVar(_, t, dep, reg) -> "LOAD (" ^ (string_of_int (getTaille t)) ^ ") " ^ (string_of_int dep) ^ "[" ^ reg ^ "]\n"
+            | InfoConst(_, v) -> "LOADL" ^ (string_of_int v) ^ "\n"
             | _ -> failwith "Erreur interne."
         end
       | True -> "LOADL 1\n"
@@ -58,7 +57,6 @@ struct
               | MultInt -> "SUBR IMul"
               | MultRat -> "CALL (ST) RMUL"
               | Inf ->  "SUBR ILss"
-              | _ -> failwith "Erreur interne."
           in gen ^ ope ^ "\n"
         end
 
@@ -68,31 +66,49 @@ struct
       | Declaration (e, info) ->
         begin
           match (info_ast_to_info info) with 
-            | InfoVar(t, dep, reg) ->
-              "PUSH (" ^ (string_of_int (getTaille t)) ^ ")\n" ^
+            | InfoVar(_, t, dep, reg) ->
+              "PUSH " ^ (string_of_int (getTaille t)) ^ "\n" ^
               (analyse_code_expression e) ^
-              "STORE (" ^ (string_of_int (getTaille t)) ^ ")" ^ (string_of_int dep) ^ "[" ^ reg ^ "]\n"
+              "STORE (" ^ (string_of_int (getTaille t)) ^ ") " ^ (string_of_int dep) ^ "[" ^ reg ^ "]\n"
             | _ -> failwith "Erreur interne."
         end
       | Affectation (e, info) ->
         begin
           match (info_ast_to_info info) with
-            | InfoVar(t, dep, reg) ->
+            | InfoVar(_, t, dep, reg) ->
               begin
-                (analyse_code_expression e) ^ "STORE (" ^ (string_of_int (getTaille t)) ^ ")" ^ (string_of_int dep) ^ "[" ^ reg ^ "]\n"
+                (analyse_code_expression e) ^ "STORE (" ^ (string_of_int (getTaille t)) ^ ") " ^ (string_of_int dep) ^ "[" ^ reg ^ "]\n"
               end
             | _ -> failwith "Erreur interne."
         end
-      | AffichageInt ->
+      | AffichageInt e ->
         (analyse_code_expression e) ^"SUBR IOut\n"
-      | AffichageRat ->
-        (analyse_code_expression e) ^"CALL (ST) ROut\n"
+      | AffichageRat e ->
+        (analyse_code_expression e) ^"CALL (SB) ROut\n"
       | AffichageBool e ->
         (analyse_code_expression e) ^"SUBR BOut\n"
       | Conditionnelle (cond, bloc_then, bloc_else) ->
-        (* TODO *)
+        begin
+          let lelse = getEtiquette() in
+          let lfinelse = getEtiquette() in 
+          (analyse_code_expression cond)
+          ^ "JUMPIF (0) " ^ lelse ^ "\n"
+          ^ (analyse_code_bloc bloc_then)
+          ^ "JUMP " ^ lfinelse ^ "\n"
+          ^ lelse ^ "\n"
+          ^ (analyse_code_bloc bloc_else)
+          ^ lfinelse ^ "\n"
+        end
       | TantQue (c, b) ->
-        (* TODO *)
+        begin
+          let ldebutelse = getEtiquette() in
+          let lfinelse = getEtiquette() in
+          ldebutelse ^ "\n"
+          ^ (analyse_code_expression c)
+          ^ "JUMPIF (0) " ^ lfinelse ^ "\n"
+          ^ (analyse_code_bloc b)
+          ^ "JUMP " ^ ldebutelse ^ "\n"
+        end
       | Empty -> ""
     
 
@@ -103,24 +119,35 @@ struct
    *   suivi de la libération des variables locales (POP (0) taillevarloc) *)
   and analyse_code_bloc li =
     let taille = List.fold_right (fun i ti -> (taille_variables_declarees i) + ti) li 0 in
-    let popfinal = "POP (0) " ^(string_of_int taille) ^ "\n" in
+    let popfinal = "POP (0) " ^ (string_of_int taille) ^ "\n" in
     (analyse_code_li li) ^ popfinal
 
 
   (* une liste d’instruction est un bloc dont on ignore la taille des variables locales *)
   and analyse_code_li li =
-    String.concat "" (List.map analyse code instruction li)
+    String.concat "" (List.map analyse_code_instruction li)
 
-
+  (* AstPlacement.fonction -> string *)
   let analyse_code_fonction (Fonction(info, _, li, e)) =
     match (info_ast_to_info info) with
       | InfoFun(nom, typeRet, typeParams) ->
         begin
-          let taille_instructions = List.fold_right (fun i ti -> (taille_variables_declarees i) + ti) li 0 in
+          (* déterminer la taille des variables locales *)
+          let taille_varloc = List.fold_right (fun i ti -> (taille_variables_declarees i) + ti) li 0 in
+          (* déterminer la taille occup ́ee par les paramètres *)
           let taille_parametres = List.fold_right (fun i ti -> (getTaille i) + ti) typeParams 0 in
-          (* TODO *)
+          nom ^ "\n"
+          ^ (analyse_code_bloc li)
+          ^ (analyse_code_expression e)
+          ^ "POP (" ^ (string_of_int (getTaille typeRet)) ^ ") " ^ (string_of_int taille_varloc) ^ "\n"
+          ^ "RETURN (" ^ (string_of_int (getTaille typeRet)) ^ ") " ^ (string_of_int taille_parametres) ^ "\n"
         end
       | _ -> failwith "Erreur interne."
-  
+
+    let analyser (AstPlacement.Programme(fonctions, prog)) =
+      let entete = getEntete() in
+      let corps_fonction = String.concat "" (List.map analyse_code_fonction fonctions) in
+      let corps_prog = analyse_code_bloc prog in
+      entete ^ corps_fonction ^ "\nmain" ^ "\n" ^ corps_prog ^ "\n" ^ "HALT"
 
 end
