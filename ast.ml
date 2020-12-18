@@ -266,7 +266,7 @@ type expression = AstType.expression
 type bloc = instruction list
  and instruction = AstType.instruction
 
-(* informations associées à l'identificateur (dont son nom), corps, expression de retour *)
+(* informations associées à l'identificateur (dont son nom), liste de paramètres, corps, expression de retour *)
 (* Plus besoin de la liste des paramètres mais on la garde pour les tests du placements mémoire *)
 type fonction = Fonction of Tds.info_ast * Tds.info_ast list * instruction list * expression
 
