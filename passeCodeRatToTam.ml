@@ -23,16 +23,16 @@ struct
             | InfoFun(n, _, _) ->
               begin
                 let gen = List.fold_right (fun t qt -> (analyse_code_expression t) ^ qt ) le "" in
-                gen ^ "CALL (SB)" ^ n ^ "\n"
+                gen ^ "CALL (SB) " ^ n ^ "\n"
               end
             | _ -> failwith "Erreur interne."
         end
       | Rationnel (e1, e2) ->
         (analyse_code_expression e1) ^ (analyse_code_expression e2)
       | Numerateur e1 ->
-        (analyse_code_expression e1) ^"POP (0) 1\n"
+        (analyse_code_expression e1) ^ "POP (0) 1\n"
       | Denominateur e1 ->
-      (analyse_code_expression e1) ^"POP (1) 1\n"
+        (analyse_code_expression e1) ^ "POP (1) 1\n"
       | Ident info ->
         begin
           match (info_ast_to_info info) with
@@ -108,6 +108,7 @@ struct
           ^ "JUMPIF (0) " ^ lfinelse ^ "\n"
           ^ (analyse_code_bloc b)
           ^ "JUMP " ^ ldebutelse ^ "\n"
+          ^ lfinelse ^ "\n"
         end
       | Empty -> ""
     
