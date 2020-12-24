@@ -1,3 +1,4 @@
+; fichiersRat/testFonctionRec.rat
 JUMP main
 
 pgcd
@@ -23,7 +24,7 @@ RETURN (1) 2
 norm
 LOAD (1) -2[LB]
 LOAD (1) -1[LB]
-CALL (SB) pgcd
+CALL (LB) pgcd
 LOAD (1) -2[LB]
 LOAD (1) 3[LB]
 SUBR IDiv
@@ -37,13 +38,12 @@ LOADL '['
 SUBR COut
 LOAD (1) -2[LB]
 SUBR IOut
-LOADL '|'
+LOADL '/'
 SUBR COut
 LOAD (1) -1[LB]
 SUBR IOut
 LOADL ']'
 SUBR COut
-POP (0) 1
 RETURN (0) 2
 
 RAdd
@@ -57,19 +57,17 @@ SUBR IAdd
 LOAD (1) -3[LB]
 LOAD (1) -1[LB]
 SUBR IMul
-CALL (SB) norm
-POP (2) 4
+CALL (ST) norm
 RETURN (2) 4
 
-multRat
+RMul
 LOAD (1) -4[LB]
 LOAD (1) -2[LB]
 SUBR IMul
 LOAD (1) -3[LB]
 LOAD (1) -1[LB]
 SUBR IMul
-CALL (SB) norm
-POP (2) 4
+CALL (ST) norm
 RETURN (2) 4
 
 fact
@@ -79,12 +77,12 @@ STORE (1) 3[LB]
 LOAD (1) -2[LB]
 LOAD (1) -1[LB]
 SUBR IEq
-JUMPIF (0) label3
+JUMPIF (0) label7
 LOAD (1) -2[LB]
 STORE (1) 3[LB]
 POP (0) 0
-JUMP label4
-label3
+JUMP label8
+label7
 LOAD (1) -2[LB]
 LOAD (1) -2[LB]
 LOADL 1
@@ -94,7 +92,8 @@ CALL (SB) fact
 SUBR IMul
 STORE (1) 3[LB]
 POP (0) 0
-label4
+label8
+POP (0) 1
 LOAD (1) 3[LB]
 RETURN (1) 2
 
@@ -107,4 +106,5 @@ STORE (1) 0[SB]
 LOAD (1) 0[SB]
 SUBR IOut
 POP (0) 1
+
 HALT

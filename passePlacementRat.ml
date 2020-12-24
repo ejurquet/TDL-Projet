@@ -3,7 +3,7 @@ module PassePlacementRat : Passe.Passe with type t1 = Ast.AstType.programme and 
 struct
 
   open Tds
-  open Exceptions
+  (* open Exceptions *)
   open Ast
   open AstType
   open AstPlacement

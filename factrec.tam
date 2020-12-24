@@ -77,32 +77,31 @@ STORE (1) 3[LB]
 LOAD (1) -2[LB]
 LOAD (1) -1[LB]
 SUBR IEq
-JUMPIF (0) label3
+JUMPIF (0) label11
 LOAD (1) -2[LB]
 STORE (1) 3[LB]
 POP (0) 0
-JUMP label4
-label3
+JUMP label12
+label11
 LOAD (1) -2[LB]
 LOAD (1) -2[LB]
 LOADL 1
 SUBR IAdd
 LOAD (1) -1[LB]
-CALL (SB)fact
+CALL (SB) fact
 SUBR IMul
 STORE (1) 3[LB]
 POP (0) 0
-label4
+label12
 POP (0) 1
 LOAD (1) 3[LB]
-POP (1) 1
 RETURN (1) 2
 
 main
 PUSH 1
 LOADL 1
 LOADL 5
-CALL (SB)fact
+CALL (SB) fact
 STORE (1) 0[SB]
 LOAD (1) 0[SB]
 SUBR IOut

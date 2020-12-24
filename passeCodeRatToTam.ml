@@ -134,13 +134,13 @@ struct
       | InfoFun(nom, typeRet, typeParams) ->
         begin
           (* déterminer la taille des variables locales *)
-          let taille_varloc = List.fold_right (fun i ti -> (taille_variables_declarees i) + ti) li 0 in
-          (* déterminer la taille occup ́ee par les paramètres *)
+          (* let taille_varloc = List.fold_right (fun i ti -> (taille_variables_declarees i) + ti) li 0 in*)
+          (* déterminer la taille occupée par les paramètres *)
           let taille_parametres = List.fold_right (fun i ti -> (getTaille i) + ti) typeParams 0 in
           nom ^ "\n"
           ^ (analyse_code_bloc li)
           ^ (analyse_code_expression e)
-          ^ "POP (" ^ (string_of_int (getTaille typeRet)) ^ ") " ^ (string_of_int taille_varloc) ^ "\n"
+          (*^ "POP (" ^ (string_of_int (getTaille typeRet)) ^ ") " ^ (string_of_int taille_varloc) ^ "\n"*)
           ^ "RETURN (" ^ (string_of_int (getTaille typeRet)) ^ ") " ^ (string_of_int taille_parametres) ^ "\n"
         end
       | _ -> failwith "Erreur interne."
