@@ -68,7 +68,6 @@ open PasseCodeRatToTam
 module CompilateurRat = Compilateur (PasseTdsRat) (PasseTypeRat) (PassePlacementRat) (PasseCodeRatToTam)
 
 
-
 open Lexing
 
 
