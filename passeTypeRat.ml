@@ -12,6 +12,23 @@ struct
   type t1 = AstTds.programme
   type t2 = AstType.programme
 
+  let rec analyse_type_affectable (af:AstTds.affectable) : (affectable * typ)  =
+    match af with
+    | Ident info ->
+      begin
+        match info_ast_to_info info with
+        | InfoVar (_,t,_,_) -> (Ident info, t)
+        | InfoConst _ -> (Ident info, Int)
+        | _ -> failwith "Erreur interne : symbole non trouvé"
+      end
+    | Valeur aff ->
+      begin
+        match (analyse_type_affectable aff) with
+        | (naf, Pointeur tp) -> (Valeur naf, tp)
+        | _ -> raise (PasUnPointeur "")
+      end
+
+
   let rec analyse_type_expression e =
     match e with
       | AstTds.AppelFonction(info, le) ->
@@ -109,6 +126,15 @@ struct
                 end
               | _ -> raise (TypeBinaireInattendu(b, t1, t2))
           end
+      | AstTds.Affectable a -> let (na,t) = analyse_type_affectable a in (Affectable na, t)
+      | AstTds.Null -> Null, Pointeur Undefined
+      | AstTds.New t -> New t, Pointeur t
+      | AstTds.Adresse info ->
+        begin
+          match info_ast_to_info info with
+          | InfoVar (_,t,_,_) -> (Adresse info, Pointeur t)
+          | _ -> failwith ("Internal error : symbol not found")
+        end
 
   
   let rec analyse_type_instruction i =
@@ -123,16 +149,14 @@ struct
             end
           else raise (TypeInattendu(te, t))
         end
-      | AstTds.Affectation(e, info) ->
+      | AstTds.Affectation(e, affectable) ->
         begin
-          let (ne, te) = analyse_type_expression e in
-          match info_ast_to_info info with
-            | InfoVar(_, t, _, _) -> 
-              begin
-                if t = te then (Affectation(ne, info)) 
-                else raise (TypeInattendu(te, t))
-              end
-            | _ -> failwith "Erreur interne."
+          let (af,typaf) = analyse_type_affectable affectable
+          in let (exp,typexp) = analyse_type_expression e in
+          if est_compatible typexp typaf then
+            Affectation (exp, af)
+          else
+            raise (TypeInattendu(typexp, typaf))
         end
       | AstTds.Affichage(e) ->
         begin

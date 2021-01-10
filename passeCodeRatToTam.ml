@@ -59,6 +59,8 @@ struct
               | Inf ->  "SUBR ILss"
           in gen ^ ope ^ "\n"
         end
+      | 
+      |
 
   (* instruction -> -> string *)
   let rec analyse_code_instruction i =
