@@ -42,7 +42,7 @@ struct
           begin
             match (info_ast_to_info info) with
               | InfoVar(_, t, dep, reg) -> "LOAD (" ^ (string_of_int (getTaille t)) ^ ") " ^ (string_of_int dep) ^ "[" ^ reg ^ "]\n"
-              | InfoConst(_, v) -> "LOADL" ^ (string_of_int v) ^ "\n"
+              | InfoConst(_, v) -> "LOADL " ^ (string_of_int v) ^ "\n"
               | _ -> failwith "Erreur interne."
           end
         | AstType.Valeur saff -> 
@@ -92,7 +92,7 @@ struct
         begin
           match (info_ast_to_info info) with
             | InfoVar(_, t, dep, reg) -> "LOAD (" ^ (string_of_int (getTaille t)) ^ ") " ^ (string_of_int dep) ^ "[" ^ reg ^ "]\n"
-            | InfoConst(_, v) -> "LOADL" ^ (string_of_int v) ^ "\n"
+            | InfoConst(_, v) -> "LOADL " ^ (string_of_int v) ^ "\n"
             | _ -> failwith "Erreur interne."
         end
       | True -> "LOADL 1\n"
