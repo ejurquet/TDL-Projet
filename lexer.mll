@@ -15,6 +15,7 @@ rule token = parse
 
 | "return"  {RETURN}
 | ";"       {PV}
+| ","       {VIRG}
 | "{"       {AO}
 | "}"       {AF}
 | "("       {PO}
@@ -42,10 +43,13 @@ rule token = parse
 | "null"    {NULL}
 | "new"     {NEW}
 | "&"       {ADRESSE}
+| "enum"   {ENUM}
 | ['0'-'9']+ as i
     { ENTIER (int_of_string i) }
 | ['a'-'z'](['A'-'Z''a'-'z''0'-'9']|"-"|"_")* as n
     { ID n }
+| ['A'-'Z'](['A'-'Z''a'-'z''0'-'9']|"-"|"_")* as n
+    { TID n }
 | eof
     { EOF }
 | _

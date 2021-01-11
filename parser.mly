@@ -9,11 +9,13 @@ open Ast.AstSyntax
 
 %token <int> ENTIER
 %token <string> ID
+%token <string> TID
 %token RETURN
 %token PV
 %token AO
 %token AF
 %token PF
+%token VIRG
 %token PO
 %token EQUAL
 %token CONST
@@ -39,6 +41,8 @@ open Ast.AstSyntax
 %token NEW
 %token ADRESSE
 %token EOF
+%token ENUM
+
 
 (* Type de l'attribut synthétisé des non-terminaux *)
 %type <programme> prog
@@ -50,17 +54,20 @@ open Ast.AstSyntax
 %type <(typ*string) list> dp
 %type <expression> e 
 %type <expression list> cp
-
+%type <affectable> a
+%type <string list> idents
+%type <typ> enum
+%type <typ list> enums
 (* Type et définition de l'axiome *)
 %start <Ast.AstSyntax.programme> main
 
 %%
 
-main : lfi = prog EOF     {lfi}
+main : lenum = enums lfi = prog EOF     {let (Programme (_,lf1,li))=lfi in (Programme (lenum,lf1,li))}
 
 prog :
-| lf = fonc  lfi = prog   {let (Programme (lf1,li))=lfi in (Programme (lf::lf1,li))}
-| ID li = bloc            {Programme ([],li)}
+| lf = fonc  lfi = prog   {let (Programme (lenum,lf1,li))=lfi in (Programme (lenum,lf::lf1,li))}
+| ID li = bloc            {Programme ([],[],li)}
 
 fonc : t=typ n=ID PO p=dp PF AO li=is RETURN exp=e PV AF {Fonction(t,n,p,li,exp)}
 
@@ -86,6 +93,7 @@ typ :
 | BOOL    {Bool}
 | INT     {Int}
 | RAT     {Rat}
+| tid = TID {TypeEnum (tid,[])}
 | typ1=typ MULT {Pointeur typ1}
 
 a :
@@ -109,8 +117,20 @@ e :
 | NULL                    {Null}
 | PO NEW typ1=typ PF      {New typ1}
 | ADRESSE n=ID            {Adresse n}
+| tid = TID				  {ExpressionEnum (tid)}
 
 cp :
 |               {[]}
 | e1=e le=cp    {e1::le}
+
+enum : 
+|ENUM id = TID  AO  lid = idents AF {TypeEnum(id,lid)}
+
+idents : 
+|idnt = TID  {[idnt]}
+|idnt = TID VIRG lid = idents {idnt::lid}
+
+enums :
+|                         {[]}
+| i1=enum li=enums              {i1::li}
 

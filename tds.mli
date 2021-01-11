@@ -9,6 +9,8 @@ type info =
   | InfoVar of string * typ * int * string
   (* Information associée à une fonction : son nom (utile pour l'appel), son type de retour et la liste des types des paramètres *)
   | InfoFun of string * typ * typ list
+  (* Information associée à une surcharge : la liste des fonctions ayant le même nom *)
+  | InfoFunSurcharges of info list
 
 (* Table des symboles *)
 type tds 
@@ -41,6 +43,9 @@ val chercherLocalement : tds -> string -> info_ast option
 (* jusqu'à trouver (ou pas) l'identificateur *)
 val chercherGlobalement : tds -> string -> info_ast option 
 
+(* Créer une chaîne de texte à partir d'une info *)
+val string_of_info : info -> string
+
 (* Affiche la tds locale *)
 val afficher_locale : tds -> unit 
 
@@ -55,6 +60,9 @@ val info_ast_to_info : info_ast -> info
 
 (* Modifie le type si c'est une InfoVar, ne fait rien sinon *)
 val modifier_type_info : typ -> info_ast -> unit
+
+(* Ajoute une signature à une info de surcharge *)
+val ajouter_signature_info : info -> info_ast -> unit
 
 (* Modifie les types de retour et des paramètres si c'est une InfoFun, ne fait rien sinon *)
 val modifier_type_fonction_info : typ -> typ list -> info_ast -> unit

@@ -6,6 +6,7 @@ struct
   open Exceptions
   open Ast
   open AstTds
+  open Type
 
   type t1 = Ast.AstSyntax.programme
   type t2 = Ast.AstTds.programme
@@ -21,12 +22,12 @@ let rec analyse_tds_affectable tds (a:AstSyntax.affectable) modif =
       | Some info ->
         begin
           match (info_ast_to_info info) with
-          | InfoFun _ -> raise (MauvaiseUtilisationIdentifiant n)
           | InfoVar _ -> Ident info
           | InfoConst _ -> if modif then 
                                 raise (MauvaiseUtilisationIdentifiant n)
                               else 
                                 Ident info
+          |  _ -> raise (MauvaiseUtilisationIdentifiant n)
         end
     end 
 
@@ -40,20 +41,20 @@ let rec analyse_tds_expression tds e =
     match e with
     |AstSyntax.AppelFonction (id,le) ->
         begin
-        match chercherGlobalement tds id with
-            | None ->
-                raise (IdentifiantNonDeclare id)
-            | Some info ->
-            begin
-                match info_ast_to_info info with
-                | InfoFun(_,_,_) ->  
-                  let leTraite = (List.map (analyse_tds_expression tds) le) in
-                  AppelFonction(info,leTraite)
-                |  _ ->
-                  (* Modification d'une constante ou d'une fonction *)  
-                  raise (MauvaiseUtilisationIdentifiant id) 
-            end
-                
+          match chercherGlobalement tds id with
+          | None ->
+              raise (IdentifiantNonDeclare id)
+          | Some info ->
+          begin
+            (* Printf.printf "%s\n" (string_of_info (info_ast_to_info info)) ;*)
+            match info_ast_to_info info with
+            | InfoFunSurcharges(_) ->  
+              let leTraite = (List.map (analyse_tds_expression tds) le) in
+              AppelFonction(info,leTraite)
+            | _ ->
+              (* Modification d'une constante ou d'une fonction *)  
+              raise (MauvaiseUtilisationIdentifiant id)
+          end
         end
   |AstSyntax.Ident (n) ->
     begin
@@ -100,11 +101,11 @@ let rec analyse_tds_expression tds e =
       | Some info ->
         begin
           match info_ast_to_info info with
-          | InfoFun _ -> raise (MauvaiseUtilisationIdentifiant n)
-          | InfoConst _ -> raise (MauvaiseUtilisationIdentifiant n)
           | InfoVar _ -> Adresse info
+          | _ -> raise (MauvaiseUtilisationIdentifiant n)
         end
     end
+  | AstSyntax.ExpressionEnum _ -> Null (* TODO *)
 
 
 (* analyse_tds_instruction : AstSyntax.instruction -> tds -> AstTds.instruction *)
@@ -220,6 +221,8 @@ and analyse_tds_bloc tds li =
             raise (DoubleDeclaration n)
 
 
+
+
 (* analyse_tds_fonction : AstSyntax.fonction -> AstTds.fonction *)
 (* Paramètre tds : la table des symboles courante *)
 (* Paramètre : la fonction à analyser *)
@@ -229,22 +232,55 @@ en une fonction de type AstTds.fonction *)
 (*FROM type fonction = Fonction of typ * string * (typ * string) list * instruction list * expression*)
 (*TO   type fonction = Fonction of typ * Tds.info_ast * (typ * Tds.info_ast ) list * instruction list * expression *)
 
-let analyse_tds_fonction maintds (AstSyntax.Fonction(t,n,lp,li,e))  =
+
+
+let analyse_tds_fonction maintds (AstSyntax.Fonction(t,n,lp,li,e)) =
     match chercherGlobalement maintds n with
         | None ->
           begin
-            let listType = List.map (fst) lp in
-            let info = InfoFun(n,t,listType) in
-            let ia = info_to_info_ast info in
-            ajouter maintds n ia;
-            let tdsParam = creerTDSFille maintds in
-            let lptraite = (List.map (fun (typ,nom) -> (typ, ajouterIdTDS tdsParam nom)) lp) in
-            let tdsBloc = creerTDSFille tdsParam in
-            let litraite = (List.map (analyse_tds_instruction tdsBloc) li) in
-            let etraite = analyse_tds_expression tdsBloc e in
-            Fonction(t,ia,lptraite,litraite,etraite)
+            let listType = List.map (fst) lp
+            in let info = InfoFun(n,t,listType)
+			      in let infosur = InfoFunSurcharges ([info])
+            in let ia = info_to_info_ast infosur
+			      in let iaSeule = info_to_info_ast info
+            in ajouter maintds n ia;
+            let tdsParam = creerTDSFille maintds
+            in let lptraite = (List.map (fun (typ,nom) -> (typ, ajouterIdTDS tdsParam nom)) lp)
+            in let tdsBloc = creerTDSFille tdsParam
+            in let litraite = (List.map (analyse_tds_instruction tdsBloc) li)
+            in let etraite = analyse_tds_expression tdsBloc e
+            in Fonction(t,ia,iaSeule,lptraite,litraite,etraite)
           end
-        | Some _ ->raise (DoubleDeclaration n)
+        | Some info ->
+			    begin
+				    match info_ast_to_info info with
+					  | InfoFunSurcharges lf ->
+						(*Le nom existe dans la tds*)
+						  begin
+                let listType = List.map (fst) lp
+                in if List.exists (fun i -> 
+                  begin
+                    match i with
+                    | InfoFun (_,_,listTypei) -> est_compatible_list listTypei listType
+                    | _ -> failwith "Erreur interne"
+                  end
+                ) lf then
+                  (*La signature est deja presente*)
+                  raise (DoubleDeclaration n)
+                else
+                  let info_f = InfoFun(n,t,listType) in
+                  let iaSeule = info_to_info_ast info_f in
+                  ajouter_signature_info info_f info; 
+                  let tdsParam = creerTDSFille maintds in 
+                  let lptraite = (List.map (fun (typ,nom) -> (typ, ajouterIdTDS tdsParam nom)) lp) in
+                  let tdsBloc = creerTDSFille tdsParam in
+                  let litraite = (List.map (analyse_tds_instruction tdsBloc) li) in
+                  let etraite = analyse_tds_expression tdsBloc e in
+                  Fonction(t,info,iaSeule,lptraite,litraite,etraite)
+						  end
+					  | _ -> raise (MauvaiseUtilisationIdentifiant n)
+				
+			end
 
 
 (* analyser : AstSyntax.ast -> AstTds.ast *)
@@ -252,7 +288,7 @@ let analyse_tds_fonction maintds (AstSyntax.Fonction(t,n,lp,li,e))  =
 (* Vérifie la bonne utilisation des identifiants et tranforme le programme
 en un programme de type AstTds.ast *)
 (* Erreur si mauvaise utilisation des identifiants *)
-let analyser (AstSyntax.Programme (fonctions,prog)) =
+let analyser (AstSyntax.Programme (typenums,fonctions,prog)) =
   let tds = creerTDSMere () in
   let nf = List.map (analyse_tds_fonction tds) fonctions in
   let nb = analyse_tds_bloc tds prog in

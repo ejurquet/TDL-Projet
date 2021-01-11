@@ -3,6 +3,7 @@ module PasseCodeRatToTam : Passe.Passe with type t1 = Ast.AstPlacement.programme
 struct
 
   open Tds
+  open Exceptions
   open Ast
   open AstType
   open AstPlacement
@@ -12,10 +13,64 @@ struct
   type t1 = AstPlacement.programme
   type t2 = string
 
+
+	let rec type_rec (af:AstType.affectable) : typ  =
+    match af with
+    | AstType.Ident info ->
+      begin
+        match info_ast_to_info info with
+        | InfoVar (_,t,_,_) -> t
+        | InfoConst _ ->  failwith "Erreur interne : affectation constante"
+        | _ -> failwith "Erreur interne : symbole non trouvé"
+      end
+    | AstType.Valeur aff ->
+      begin
+        match (type_rec aff) with
+        |Pointeur tp -> tp
+        | _ -> raise (PasUnPointeur "")
+      end
+	  
+	let taille_aff (af:AstType.affectable) : int = (getTaille (type_rec af))
+	  
+	  
+  let rec analyse_code_affectable (af : affectable) eval_set =
+    (* pour une évaluation *)
+    if eval_set then
+      begin
+        match af with
+        | AstType.Ident info -> 
+          begin
+            match (info_ast_to_info info) with
+              | InfoVar(_, t, dep, reg) -> "LOAD (" ^ (string_of_int (getTaille t)) ^ ") " ^ (string_of_int dep) ^ "[" ^ reg ^ "]\n"
+              | InfoConst(_, v) -> "LOADL" ^ (string_of_int v) ^ "\n"
+              | _ -> failwith "Erreur interne."
+          end
+        | AstType.Valeur saff -> 
+			(* on charge en memoire un objet de la taille de af*)
+			let tailleLoad = taille_aff af
+			(*analyse_code_affectable saff true doit renvoyer une adresse, car on en prend in fine la valeur*)
+			in(analyse_code_affectable saff true) ^ "LOADI ("^(string_of_int tailleLoad)^")\n"
+      end
+    (* pour un set *)
+    else
+      match af with
+      | AstType.Ident info -> 
+          begin
+            match (info_ast_to_info info) with
+            | InfoVar(_, t, dep, reg) ->
+              begin
+                "STORE (" ^ (string_of_int (getTaille t)) ^ ") " ^ (string_of_int dep) ^ "[" ^ reg ^ "]\n"
+              end
+            | _ -> failwith "Erreur interne."
+          end
+		  (* Pout set la valeur d'un pointeur, on recupere ce pointeur, puis on stocke les données a l'adresse obtenue*)
+      | AstType.Valeur saff -> (analyse_code_affectable saff true) ^ "STOREI (" ^ (string_of_int (taille_aff af)) ^ ")" ^ "\n"
+
+
   (* expression -> string *)
   (* Produit le code correspondant à l'instruction. L’exécution de ce code laissera
    * en sommet de pile le résultat de l’évaluation de cette expression. *)
-  let rec analyse_code_expression e =
+  and analyse_code_expression e =
     match e with
       | AppelFonction (info, le) ->
         begin
@@ -59,8 +114,21 @@ struct
               | Inf ->  "SUBR ILss"
           in gen ^ ope ^ "\n"
         end
-      | 
-      |
+      | Affectable a -> analyse_code_affectable a true
+        (* Null ne pointe vers rien *)
+      | Null -> "SUBR MVoid" ^ "\n"
+      | New t ->
+        "LOADL " ^ (string_of_int (getTaille t)) ^ "\n"
+        (* réserver suffisamment de place pour t et mettre au sommet de la pile l'adresse réservée *)
+        ^ "SUBR MAlloc" ^ "\n"
+      | Adresse info ->
+        begin
+          match info_ast_to_info info with
+          | InfoVar (_,_,deplacement,registre) -> 
+          (* mettre au sommet de la pile l'adresse correspondant à la position de la variable *)
+            "LOADA " ^ (string_of_int deplacement) ^ "[" ^ registre ^ "]" ^ "\n"
+          | _ -> failwith "Erreur interne"
+        end
 
   (* instruction -> -> string *)
   let rec analyse_code_instruction i =
@@ -74,14 +142,10 @@ struct
               "STORE (" ^ (string_of_int (getTaille t)) ^ ") " ^ (string_of_int dep) ^ "[" ^ reg ^ "]\n"
             | _ -> failwith "Erreur interne."
         end
-      | Affectation (e, info) ->
+      | Affectation (e, affectable) ->
         begin
-          match (info_ast_to_info info) with
-            | InfoVar(_, t, dep, reg) ->
-              begin
-                (analyse_code_expression e) ^ "STORE (" ^ (string_of_int (getTaille t)) ^ ") " ^ (string_of_int dep) ^ "[" ^ reg ^ "]\n"
-              end
-            | _ -> failwith "Erreur interne."
+          let code_expression = (analyse_code_expression e)
+          in code_expression ^ (analyse_code_affectable affectable false)
         end
       | AffichageInt e ->
         (analyse_code_expression e) ^"SUBR IOut\n"

@@ -31,16 +31,34 @@ struct
 
   let rec analyse_type_expression e =
     match e with
-      | AstTds.AppelFonction(info, le) ->
+	     | AstTds.AppelFonction(info, le) ->
           begin
             match info_ast_to_info info with
-              | InfoFun(_, typeRet, typeParams) ->
+            | InfoFunSurcharges(lif) ->
+                  begin
+					  let nlet = List.map(fun ei -> analyse_type_expression ei) le
+					  in let nle = List.map(fst) nlet
+					  in let ltype = List.map(snd) nlet
+					  in let funsigmatch = (
+              fun i -> 
                 begin
-                  let nlet = List.map(fun ei -> analyse_type_expression ei) le in
-                  let nle = List.map(fst) nlet in
-                  let ltype = List.map(snd) nlet in
-                  if (est_compatible_list ltype typeParams) then (AppelFonction (info, nle), typeRet)
-                  else raise (TypesParametresInattendus(typeParams, ltype))
+                  match i with
+                  | InfoFun (_, _, typeParams) -> est_compatible_list typeParams ltype
+                  | _ -> failwith "Erreur interne"
+                end
+              ) in
+						(*trouver la signature qui correspond*)
+            let signaturematch = List.find_opt (funsigmatch) lif
+							in match signaturematch with
+								(*Pas de signature trouvee*)
+								| None -> raise (TypesParametresInattendus([], ltype))
+								(*Signature trouvee*)
+                | Some info -> 
+                  begin
+                    match info with
+                    | InfoFun (_, typeret, _) -> (AppelFonction (info_to_info_ast info, nle), typeret)
+                    | _ -> failwith "Erreur interne"
+									end
                 end
               | _ -> failwith "Erreur interne."
           end
@@ -203,27 +221,26 @@ struct
         end
   
 
-  let analyse_type_fonction (AstTds.Fonction(t, info, lp, li, e)) =
-    let ltypeparam = List.map(fst) lp in
-    modifier_type_fonction_info t ltypeparam info;
+  let analyse_type_fonction (AstTds.Fonction(t, _, infoseule, lp, li, e)) =
+	let ltypeparam = List.map(fst) lp
+    in modifier_type_fonction_info t ltypeparam infoseule;
     let lpt = List.map(fun (typeinfo, i) ->
     begin
       modifier_type_info typeinfo i;
       i
     end
     ) lp in
-    let lit = List.map(analyse_type_instruction) li in
-    let (ne, te) = analyse_type_expression e in
-    if te = t then
+    let lit = List.map(analyse_type_instruction) li
+    in let (ne, te) = analyse_type_expression e
+    in if te = t then
       begin
-        Fonction (info, lpt, lit, ne)
+        Fonction (infoseule, lpt, lit, ne)
       end
     else raise (TypeInattendu(te, t))
 
-
   let analyser (AstTds.Programme(fonctions, prog)) =
-    let ft= List.map (analyse_type_fonction) fonctions in
-    let pt = List.map (analyse_type_instruction) prog in
-    Programme (ft, pt)
+    let ft= List.map (analyse_type_fonction) fonctions
+    in let pt = List.map (analyse_type_instruction) prog
+    in Programme (ft, pt)
 
 end

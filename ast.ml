@@ -48,6 +48,7 @@ struct
 
   type affectable = Ident of string | Valeur of affectable
 
+	
   (* Expressions de Rat *)
   type expression =
     (* Appel de fonction représenté par le nom de la fonction et la liste des paramètres réels *)
@@ -76,6 +77,7 @@ struct
     | New of typ
     (* & *)
     | Adresse of string
+	  | ExpressionEnum of string
 
 
   (* Instructions de Rat *)
@@ -100,7 +102,7 @@ struct
 
   (* Structure d'un programme Rat *)
   (* liste de fonction - programme principal *)
-  type programme = Programme of fonction list * bloc
+  type programme = Programme of typ list *  fonction list * bloc
 
 end
 
@@ -141,6 +143,7 @@ struct
     | Affectable a1 -> string_of_affectable a1 
     | New typ -> "(new " ^ (string_of_type typ) ^")"
     | Adresse id -> "& " ^ id
+    | ExpressionEnum n -> "enum " ^ n
 
   (* Conversion des instructions *)
   let rec string_of_instruction i =
@@ -161,8 +164,9 @@ struct
                                         "Return "^(string_of_expression e)^"\n"
 
   (* Conversion d'un programme Rat *)
-  let string_of_programme (Programme (fonctions, instruction)) =
-    (List.fold_right (fun f tq -> (string_of_fonction f)^tq) fonctions "")^
+  let string_of_programme (Programme (enums, fonctions, instruction)) =
+    (List.fold_right (fun f tq -> (string_of_type f)^tq) enums "") ^
+    (List.fold_right (fun f tq -> (string_of_fonction f)^tq) fonctions "") ^
     (List.fold_right (fun i tq -> (string_of_instruction i)^tq) instruction "")
 
   (* Affichage d'un programme Rat *)
@@ -215,7 +219,7 @@ struct
 
   (* Structure des fonctions dans notre langage *)
   (* type de retour - informations associées à l'identificateur (dont son nom) - liste des paramètres (association type et information sur les paramètres) - corps de la fonction - expression de retour *)
-  type fonction = Fonction of typ * Tds.info_ast * (typ * Tds.info_ast ) list * instruction list * expression 
+  type fonction = Fonction of typ * Tds.info_ast* Tds.info_ast* (typ * Tds.info_ast ) list * instruction list * expression 
 
   (* Structure d'un programme dans notre langage *)
   type programme = Programme of fonction list * bloc
