@@ -239,7 +239,7 @@ let analyse_tds_fonction maintds (AstSyntax.Fonction(t,n,lp,li,e)) =
         | None ->
           begin
             let listType = List.map (fst) lp
-            in let info = InfoFun(n,t,listType)
+            in let info = InfoFun(n, t, listType)
 			      in let infosur = InfoFunSurcharges ([info])
             in let ia = info_to_info_ast infosur
 			      in let iaSeule = info_to_info_ast info
@@ -268,7 +268,7 @@ let analyse_tds_fonction maintds (AstSyntax.Fonction(t,n,lp,li,e)) =
                   (*La signature est deja presente*)
                   raise (DoubleDeclaration n)
                 else
-                  let info_f = InfoFun(n,t,listType) in
+                  let info_f = InfoFun(n, t, listType) in
                   let iaSeule = info_to_info_ast info_f in
                   ajouter_signature_info info_f info; 
                   let tdsParam = creerTDSFille maintds in 

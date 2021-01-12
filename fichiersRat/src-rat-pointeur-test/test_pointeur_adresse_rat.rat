@@ -1,0 +1,6 @@
+pointeur{
+    rat * y = (new rat);
+    rat x = [3/4];
+    y = & x;
+    print (* y);
+}

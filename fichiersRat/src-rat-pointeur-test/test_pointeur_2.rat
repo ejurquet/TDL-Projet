@@ -1,0 +1,11 @@
+pointeur{
+    int * x = (new int);
+    (*x) = 3;
+    int z = 18;
+    int *y = & z;
+    print (*y);
+    (* y) = (*x);
+    int ** w = (new int*);
+    (*w) = x;
+    print(* (* w));
+}

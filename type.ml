@@ -5,9 +5,9 @@ let rec string_of_type t =
   | Bool ->  "Bool"
   | Int  ->  "Int"
   | Rat  ->  "Rat"
-  | Pointeur (tp) -> "Pointeur (" ^ string_of_type tp ^ ")"
+  | Pointeur (tp) -> "Pointeur_" ^ string_of_type tp ^ "_"
   | Undefined -> "Undefined"
-  | TypeEnum (str,le) -> "Enum " ^ str ^ " : " ^ List.fold_right (fun t qt -> t ^ " " ^ qt) le ""
+  | TypeEnum (str,le) -> "Enum_" ^ str ^ "_" ^ List.fold_right (fun t qt -> t ^ "_" ^ qt) le ""
 
 let rec est_compatible t1 t2 =
   match t1, t2 with

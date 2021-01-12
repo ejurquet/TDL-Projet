@@ -100,3 +100,27 @@ let%expect_test "factfuns" =
 let%expect_test "factrec" =
   runtam "../../fichiersRat/src-rat-tam-test/factrec.rat";
   [%expect{| 120 |}]
+
+let%expect_test "pointeur_0" =
+  runtam "../../fichiersRat/src-rat-pointeur-test/test_pointeur_0.rat";
+  [%expect{| 3 |}]
+
+let%expect_test "pointeur_2" =
+  runtam "../../fichiersRat/src-rat-pointeur-test/test_pointeur_2.rat";
+  [%expect{| 183 |}]
+
+let%expect_test "pointeur_adresse_rat" =
+  runtam "../../fichiersRat/src-rat-pointeur-test/test_pointeur_adresse_rat.rat";
+  [%expect{| [3/4] |}]
+
+let%expect_test "pointeur_fonction" =
+  runtam "../../fichiersRat/src-rat-pointeur-test/test_pointeur_fonction.rat";
+  [%expect{| 650 |}]
+
+let%expect_test "pointeur_pointeur_rat" =
+  runtam "../../fichiersRat/src-rat-pointeur-test/test_pointeur_pointeur_rat.rat";
+  [%expect{| [3/4] |}]
+
+let%expect_test "pointeur_rat" =
+  runtam "../../fichiersRat/src-rat-pointeur-test/test_pointeur_rat.rat";
+  [%expect{| [3/4] |}]

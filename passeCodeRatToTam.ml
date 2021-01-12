@@ -75,10 +75,10 @@ struct
       | AppelFonction (info, le) ->
         begin
           match info_ast_to_info info with 
-            | InfoFun(n, _, _) ->
+            | InfoFun(n, _, ltyp) ->
               begin
                 let gen = List.fold_right (fun t qt -> (analyse_code_expression t) ^ qt ) le "" in
-                gen ^ "CALL (SB) " ^ n ^ "\n"
+                gen ^ "CALL (SB) " ^ (nom_complet_fonction n ltyp) ^ "\n"
               end
             | _ -> failwith "Erreur interne."
         end
@@ -203,7 +203,7 @@ struct
           (* let taille_varloc = List.fold_right (fun i ti -> (taille_variables_declarees i) + ti) li 0 in*)
           (* déterminer la taille occupée par les paramètres *)
           let taille_parametres = List.fold_right (fun i ti -> (getTaille i) + ti) typeParams 0 in
-          nom ^ "\n"
+          nom_complet_fonction nom typeParams ^ "\n"
           ^ (analyse_code_bloc li)
           ^ (analyse_code_expression e)
           (*^ "POP (" ^ (string_of_int (getTaille typeRet)) ^ ") " ^ (string_of_int taille_varloc) ^ "\n"*)

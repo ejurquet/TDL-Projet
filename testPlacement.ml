@@ -169,7 +169,7 @@ let%test "test6_z1" =
 
   let%test "test8_f_x_1" = 
     test "../../fichiersRat/src-rat-placement-test/test8.rat"  "f" ("x",1)  (3, "LB")
-    
+
   let%test "test8_f_y_1" = 
     test "../../fichiersRat/src-rat-placement-test/test8.rat"  "f" ("y",1)  (4, "LB")
     

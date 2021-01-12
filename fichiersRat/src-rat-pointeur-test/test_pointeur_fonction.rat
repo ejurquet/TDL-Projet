@@ -1,0 +1,13 @@
+int incr (int * i int * n){
+  (*i) = ((*i) + (*n));
+  return 0;
+}
+
+test{
+    int a = 1;
+    int b = 5; 
+    int x = call incr ((& a) (& b));
+    print a;
+    print b;
+    print x;
+}
