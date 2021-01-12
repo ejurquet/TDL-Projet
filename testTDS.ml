@@ -357,3 +357,32 @@ let%test_unit "code_testfuns" =
 let%test_unit "code_complique" = 
   let _ = compiler   "../../fichiersRat/src-rat-tam-test/complique.rat" in ()
 
+  (* Fichiers de tests des enums -> doivent rater la compilation*)
+
+let%test_unit "enum_crash_1" = 
+  try 
+    let _ = compiler "../../fichiersRat/src-rat-enum-test/test_enum_crash_1.rat" 
+    in raise ErreurNonDetectee
+  with
+  | EnumIncorrecte -> ()
+
+let%test_unit "enum_crash_2" = 
+  try 
+    let _ = compiler "../../fichiersRat/src-rat-enum-test/test_enum_crash_2.rat" 
+    in raise ErreurNonDetectee
+  with
+  | EnumIncorrecte -> ()
+
+let%test_unit "enum_crash_3" = 
+  try 
+    let _ = compiler "../../fichiersRat/src-rat-enum-test/test_enum_crash_3.rat" 
+    in raise ErreurNonDetectee
+  with
+  | EnumIncorrecte -> ()
+
+let%test_unit "enum_crash_4" = 
+  try 
+    let _ = compiler "../../fichiersRat/src-rat-enum-test/test_enum_crash_4.rat" 
+    in raise ErreurNonDetectee
+  with
+  | TypeBinaireInattendu _ -> ()

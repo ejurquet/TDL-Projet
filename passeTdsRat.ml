@@ -11,6 +11,38 @@ struct
   type t1 = Ast.AstSyntax.programme
   type t2 = Ast.AstTds.programme
 
+
+  (*Enums *)
+let listeTotaleIds (enums:(typ list)) = 
+    let ffold e qt = 
+        match e with
+            |TypeEnum(_, lid) -> lid @ qt
+            | _ -> failwith "Erreur Interne"
+    in
+    List.fold_right ffold enums []
+
+let listeTotaleNomsEnums (enums:(typ list)) = 
+    let ffold e qt = 
+        match e with
+            |TypeEnum(nom, _) -> nom::qt
+            |_ -> failwith "Erreur Interne"
+    in
+    List.fold_right ffold enums []
+
+let rec elementsUniques (enums:(string list))= 
+  match enums with
+  | [] -> true
+  | t::q -> 
+    begin
+      if (List.exists (fun u -> u = t ) q ) then false
+      else elementsUniques q
+    end
+
+let enumsCorrects (enums:(typ list)) =
+    let noms = listeTotaleNomsEnums enums in
+    let ids = listeTotaleIds enums in 
+    ((elementsUniques noms) && (elementsUniques ids))
+
 (* analyse_tds_expression : *)
 let rec analyse_tds_affectable tds (a:AstSyntax.affectable) modif =
   match a with
@@ -105,7 +137,7 @@ let rec analyse_tds_expression tds e =
           | _ -> raise (MauvaiseUtilisationIdentifiant n)
         end
     end
-  | AstSyntax.ExpressionEnum _ -> Null (* TODO *)
+  | AstSyntax.ExpressionEnum e -> ExpressionEnum e
 
 
 (* analyse_tds_instruction : AstSyntax.instruction -> tds -> AstTds.instruction *)
@@ -292,6 +324,8 @@ let analyser (AstSyntax.Programme (typenums,fonctions,prog)) =
   let tds = creerTDSMere () in
   let nf = List.map (analyse_tds_fonction tds) fonctions in
   let nb = analyse_tds_bloc tds prog in
-  Programme (nf,nb)
+  if enumsCorrects typenums then
+	Programme (typenums,nf,nb)
+  else raise EnumIncorrecte
 
 end

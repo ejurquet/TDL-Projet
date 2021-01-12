@@ -98,6 +98,7 @@ struct
       | True -> "LOADL 1\n"
       | False -> "LOADL 0\n"
       | Entier i -> "LOADL " ^ (string_of_int i) ^ "\n"
+	  | ExpressionEnum i -> "LOADL " ^ (string_of_int i) ^ "\n"
       | Binaire (b, e1, e2) ->
         begin
           let gen_e1 = analyse_code_expression e1 in
@@ -108,6 +109,7 @@ struct
               | PlusInt -> "SUBR IAdd"
               | PlusRat -> "CALL (ST) RAdd"
               | EquInt -> "SUBR IEq"
+			  | EquEnum -> "SUBR IEq"
               | EquBool -> "SUBR BEq"
               | MultInt -> "SUBR IMul"
               | MultRat -> "CALL (ST) RMUL"
@@ -200,13 +202,13 @@ struct
       | InfoFun(nom, typeRet, typeParams) ->
         begin
           (* déterminer la taille des variables locales *)
-          (* let taille_varloc = List.fold_right (fun i ti -> (taille_variables_declarees i) + ti) li 0 in*)
+          let taille_varloc = List.fold_right (fun i ti -> (taille_variables_declarees i) + ti) li 0 in
           (* déterminer la taille occupée par les paramètres *)
           let taille_parametres = List.fold_right (fun i ti -> (getTaille i) + ti) typeParams 0 in
           nom_complet_fonction nom typeParams ^ "\n"
-          ^ (analyse_code_bloc li)
+          ^ (analyse_code_li li)
           ^ (analyse_code_expression e)
-          (*^ "POP (" ^ (string_of_int (getTaille typeRet)) ^ ") " ^ (string_of_int taille_varloc) ^ "\n"*)
+          ^ "POP (" ^ (string_of_int (getTaille typeRet)) ^ ") " ^ (string_of_int taille_varloc) ^ "\n"
           ^ "RETURN (" ^ (string_of_int (getTaille typeRet)) ^ ") " ^ (string_of_int taille_parametres) ^ "\n"
         end
       | _ -> failwith "Erreur interne."

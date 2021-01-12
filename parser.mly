@@ -1,7 +1,6 @@
 /* Imports. */
 
 %{
-
 open Type
 open Ast.AstSyntax
 %}
@@ -124,7 +123,7 @@ cp :
 | e1=e le=cp    {e1::le}
 
 enum : 
-|ENUM id = TID  AO  lid = idents AF {TypeEnum(id,lid)}
+|ENUM id = TID  AO  lid = idents AF PV {TypeEnum(id,lid)}
 
 idents : 
 |idnt = TID  {[idnt]}

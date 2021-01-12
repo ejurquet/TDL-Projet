@@ -77,7 +77,7 @@ struct
     | New of typ
     (* & *)
     | Adresse of string
-	  | ExpressionEnum of string
+	| ExpressionEnum of string
 
 
   (* Instructions de Rat *)
@@ -202,6 +202,7 @@ struct
     | Affectable of affectable
     | New of typ
     | Adresse of Tds.info_ast
+	| ExpressionEnum of string
 
   (* instructions existantes dans notre langage *)
   (* ~ instruction de l'AST syntaxique où les noms des identifiants ont été 
@@ -222,7 +223,7 @@ struct
   type fonction = Fonction of typ * Tds.info_ast* Tds.info_ast* (typ * Tds.info_ast ) list * instruction list * expression 
 
   (* Structure d'un programme dans notre langage *)
-  type programme = Programme of fonction list * bloc
+  type programme = Programme of typ list * fonction list * bloc
 
 end
     
@@ -236,7 +237,7 @@ struct
 type affectable = Ident of Tds.info_ast | Valeur of affectable
 
 (* Opérateurs binaires existants dans Rat - résolution de la surcharge *)
-type binaire = PlusInt | PlusRat | MultInt | MultRat | EquInt | EquBool | Inf
+type binaire = PlusInt | PlusRat | MultInt | MultRat | EquInt | EquBool | Inf | EquEnum
 
 (* Expressions existantes dans Rat *)
 (* = expression de AstTds *)
@@ -254,6 +255,7 @@ type expression =
   | Affectable of affectable
   | New of typ
   | Adresse of Tds.info_ast
+  | ExpressionEnum of int
 
 (* instructions existantes Rat *)
 (* = instruction de AstTds + informations associées aux identificateurs, mises à jour *)

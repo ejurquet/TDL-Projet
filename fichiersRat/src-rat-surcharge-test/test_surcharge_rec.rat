@@ -1,0 +1,20 @@
+int f (rat r1 rat r2) {
+        return 2;
+    }
+
+int f (int i int n){
+  int res = 0;
+  if (i=n){
+    res = i;
+  } else {
+    res = ( i * call f ((i+1) n));
+  }
+  return res;
+}
+
+main{
+    int i = call f (1 5) ;
+    print i;
+    i = call f ([1/2] [1/3]);
+    print i;
+}

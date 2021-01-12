@@ -15,3 +15,6 @@ exception TypeBinaireInattendu of binaire * typ * typ (* les types sont les type
 (* Exception pour les pointeurs *)
 exception PasUnPointeur of string
 exception PointeurNul of string
+
+(*Exceptions enum*)
+exception EnumIncorrecte

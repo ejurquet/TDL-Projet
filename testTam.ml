@@ -124,3 +124,23 @@ let%expect_test "pointeur_pointeur_rat" =
 let%expect_test "pointeur_rat" =
   runtam "../../fichiersRat/src-rat-pointeur-test/test_pointeur_rat.rat";
   [%expect{| [3/4] |}]
+
+let%expect_test "surcharge_0" =
+  runtam "../../fichiersRat/src-rat-surcharge-test/test_surcharge_0.rat";
+  [%expect{| 12 |}]
+
+let%expect_test "surcharge_rec" =
+  runtam "../../fichiersRat/src-rat-surcharge-test/test_surcharge_rec.rat";
+  [%expect{| 1202 |}]
+
+let%expect_test "surcharge_vide" =
+  runtam "../../fichiersRat/src-rat-surcharge-test/test_surcharge_vide.rat";
+  [%expect{| 13 |}]
+
+let%expect_test "surcharge_beaucoup" =
+  runtam "../../fichiersRat/src-rat-surcharge-test/test_surcharge_beaucoup.rat";
+  [%expect{| 1234567 |}]
+
+let%expect_test "enum_0" =
+  runtam "../../fichiersRat/src-rat-enum-test/test_enum_0.rat";
+  [%expect{| falsetrue |}]
