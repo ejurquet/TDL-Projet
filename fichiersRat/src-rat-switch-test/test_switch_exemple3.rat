@@ -1,0 +1,39 @@
+int f (int a) {
+
+    switch(a) {
+        case 0 : 
+            int x = 0;
+            print x;
+            break;
+        case 9 :
+            int x = 2;
+            print x;
+            break;
+        case 6 :
+            int z = 4;
+            print z;
+        default :
+            print 3;
+        case 1 :
+            int y = 4;
+            print y;
+            break;
+        case 2 :
+            int y = 99;
+            print y;
+        case 3:
+            int b = 8;
+            print b;
+    }
+    return 0;
+}
+
+exemple3{
+    int i = call f (0);
+    i = call f (1);
+    i = call f (2);
+    i = call f (3);
+    i = call f (6);
+    i = call f (9);
+    i = call f (10);
+}

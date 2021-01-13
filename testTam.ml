@@ -157,9 +157,21 @@ let%expect_test "switch_enum" =
   runtam "../../fichiersRat/src-rat-switch-test/test_switch_enum.rat";
   [%expect{| 19 |}]
 
+let%expect_test "switch_exemple1" =
+  runtam "../../fichiersRat/src-rat-switch-test/test_switch_exemple1.rat";
+  [%expect{| 0434 |}]
+
 let%expect_test "switch_exemple2" =
   runtam "../../fichiersRat/src-rat-switch-test/test_switch_exemple2.rat";
   [%expect{| 427878372096 |}]
+
+let%expect_test "switch_exemple3" =
+  runtam "../../fichiersRat/src-rat-switch-test/test_switch_exemple3.rat";
+  [%expect{| 049988434234 |}]
+
+let%expect_test "switch_exemple4" =
+  runtam "../../fichiersRat/src-rat-switch-test/test_switch_exemple4.rat";
+  [%expect{| 4278783209653 |}]
 
 let%expect_test "switch_expression-complexe" =
   runtam "../../fichiersRat/src-rat-switch-test/test_switch_expression-complexe.rat";

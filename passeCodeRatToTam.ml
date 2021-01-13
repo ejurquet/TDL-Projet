@@ -185,24 +185,24 @@ and analyse_code_listcase lc e=
 	(*dernier label du switch*)
     let labFinTotale = getEtiquette() in
         let funFold case (st, debs) = 
-          let (s, d) = analyse_code_case labFinTotale e case debs in
+          let (s, d) = analyse_code_case labFinTotale e case debs lc in
           (s ^ st, d) in
         (* String.concat "" (List.map (analyse_code_case labFinTotale e ) lc) *)
         let (stringRes, _) = List.fold_right funFold lc ("", labFinTotale) in
 					(*indiquer la sortie du switch*)
 					stringRes ^ labFinTotale ^ "\n"
-and analyse_code_case labFinTotale e c labDebutSuivant =
+and analyse_code_case labFinTotale e c labDebutSuivant lc =
   (*label du début du case*)
   let labDebutCase = getEtiquette() in
   (*label de la fin du case*)
 	let labFinCase = getEtiquette() in 
-  let stringRetour = analyse_code_expression e ^ (analyse_cond_saut_switch labFinCase c) ^ labDebutCase ^ "\n"
+  let stringRetour = (analyse_cond_saut_switch labFinCase c 0 lc e) ^ labDebutCase ^ "\n"
     ^ (analyse_bloc_switch c) ^ (analyse_code_break labFinTotale c labDebutSuivant) ^ labFinCase ^ "\n"
   in (stringRetour, labDebutCase)
 
-and analyse_cond_saut_switch labFinCase c =
+and analyse_cond_saut_switch labFinCase c inv lc e=
 	match c with
-    | AstType.CaseEntier(v,_, _) -> "LOADL " ^ (string_of_int v) ^ "\n" ^ "SUBR IEq\n" ^ "JUMPIF (0) " ^ labFinCase ^ "\n"
+    | AstType.CaseEntier(v,_, _) -> analyse_code_expression e ^"LOADL " ^ (string_of_int v) ^ "\n" ^ "SUBR IEq\n" ^ "JUMPIF ("^(string_of_int inv)^") " ^ labFinCase ^ "\n"
     | AstType.CaseTid(ve,_,_) -> 
         begin
           let v = 
@@ -210,11 +210,13 @@ and analyse_cond_saut_switch labFinCase c =
             | ExpressionEnum vi -> vi
             | _ -> failwith "Erreur interne"
           in 
-          "LOADL " ^ (string_of_int v) ^ "\n" ^ "SUBR IEq\n" ^ "JUMPIF (0) " ^ labFinCase ^ "\n"
+          analyse_code_expression e ^ "LOADL " ^ (string_of_int v) ^ "\n" ^ "SUBR IEq\n" ^ "JUMPIF (" ^ (string_of_int inv) ^ ") " ^ labFinCase ^ "\n"
         end
-    | AstType.CaseTrue(_, _) -> "LOADL 1\n" ^ "SUBR IEq\n" ^ "JUMPIF (0) " ^ labFinCase ^ "\n"
-    | AstType.CaseFalse(_, _) -> "LOADL 0\n" ^ "SUBR IEq\n" ^ "JUMPIF (0) " ^ labFinCase ^ "\n"
-    | AstType.CaseDefault(_, _) -> ""
+    | AstType.CaseTrue(_, _) -> analyse_code_expression e ^ "LOADL 1\n" ^ "SUBR IEq\n" ^ "JUMPIF (" ^ (string_of_int inv) ^ ") " ^ labFinCase ^ "\n"
+    | AstType.CaseFalse(_, _) -> analyse_code_expression e ^ "LOADL 0\n" ^ "SUBR IEq\n" ^ "JUMPIF (" ^ (string_of_int inv) ^ ") " ^ labFinCase ^ "\n"
+    | AstType.CaseDefault(_, _) -> (*sauter le cas si l'une des autres conditions est vraie*)
+			if inv =1 then "" 
+			else String.concat "" (List.map (fun cm -> analyse_cond_saut_switch labFinCase cm 1 lc e) lc)
 
 and analyse_code_break labFinTotale c labDebutSuivant =
 let b = 
