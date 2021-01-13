@@ -44,6 +44,11 @@ rule token = parse
     | "new"     {NEW}
     | "&"       {ADRESSE}
     | "enum"   {ENUM}
+	| "switch" {SWITCH}
+	| "case"   {CASE}
+	| "break"  {BREAK}
+	| "default"  {DEFAULT}
+	| ":"      {DPTS}
     | ['0'-'9']+ as i
         { ENTIER (int_of_string i) }
     | ['a'-'z'](['A'-'Z''a'-'z''0'-'9']|"-"|"_")* as n

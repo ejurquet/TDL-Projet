@@ -48,7 +48,8 @@ struct
 
   type affectable = Ident of string | Valeur of affectable
 
-	
+  type break = Break | Lambda
+  	
   (* Expressions de Rat *)
   type expression =
     (* Appel de fonction représenté par le nom de la fonction et la liste des paramètres réels *)
@@ -79,7 +80,6 @@ struct
     | Adresse of string
 	| ExpressionEnum of string
 
-
   (* Instructions de Rat *)
   type bloc = instruction list
   and instruction =
@@ -95,6 +95,10 @@ struct
     | Conditionnelle of expression * bloc * bloc
     (*Boucle TantQue représentée par la conditin d'arrêt de la boucle et le bloc d'instructions *)
     | TantQue of expression * bloc
+	  | Switch of expression * (case list)
+
+  and case = CaseTid of string * instruction list * break | CaseEntier of int * instruction list * break | CaseTrue of instruction list * break | CaseFalse of instruction list * break | CaseDefault of instruction list * break
+
 
   (* Structure des fonctions de Rat *)
   (* type de retour - nom - liste des paramètres (association type et nom) - corps de la fonction - expression de retour *)
@@ -103,7 +107,7 @@ struct
   (* Structure d'un programme Rat *)
   (* liste de fonction - programme principal *)
   type programme = Programme of typ list *  fonction list * bloc
-
+  
 end
 
 
@@ -148,15 +152,16 @@ struct
   (* Conversion des instructions *)
   let rec string_of_instruction i =
     match i with
-    | Declaration (t, n, e) -> "Declaration  : "^(string_of_type t)^" "^n^" = "^(string_of_expression e)^"\n"
-    | Affectation (n,e) ->  "Affectation  : "^(string_of_affectable n)^" = "^(string_of_expression e)^"\n"
+    | Declaration (t, n, e) -> "Declaration  : "^(string_of_type t)^" "^n^" = "^(string_of_expression e) ^ "\n"
+    | Affectation (n,e) ->  "Affectation  : "^(string_of_affectable n)^" = "^(string_of_expression e) ^ "\n"
     | Constante (n,i) ->  "Constante  : "^n^" = "^(string_of_int i)^"\n"
     | Affichage e ->  "Affichage  : "^(string_of_expression e)^"\n"
-    | Conditionnelle (c,t,e) ->  "Conditionnelle  : IF "^(string_of_expression c)^"\n"^
-                                  "THEN \n"^((List.fold_right (fun i tq -> (string_of_instruction i)^tq) t ""))^
-                                  "ELSE \n"^((List.fold_right (fun i tq -> (string_of_instruction i)^tq) e ""))^"\n"
+    | Conditionnelle (c,t,e) ->  "Conditionnelle  : IF "^(string_of_expression c) ^ "\n" ^
+                                  "THEN \n"^((List.fold_right (fun i tq -> (string_of_instruction i) ^ tq) t "")) ^
+                                  "ELSE \n"^((List.fold_right (fun i tq -> (string_of_instruction i) ^ tq) e "")) ^ "\n"
     | TantQue (c,b) -> "TantQue  : TQ "^(string_of_expression c)^"\n"^
-                                  "FAIRE \n"^((List.fold_right (fun i tq -> (string_of_instruction i)^tq) b ""))^"\n"
+                                  "FAIRE \n"^((List.fold_right (fun i tq -> (string_of_instruction i)^tq) b "")) ^ "\n"
+    | Switch (e,_) -> "Switch : " ^ (string_of_expression e)
 
   (* Conversion des fonctions *)
   let string_of_fonction (Fonction(t,n,lp,li,e)) = (string_of_type t)^" "^n^" ("^((List.fold_right (fun (t,n) tq -> (string_of_type t)^" "^n^" "^tq) lp ""))^") = \n"^
@@ -184,6 +189,8 @@ module AstTds =
 struct
 
   type affectable = Ident of Tds.info_ast | Valeur of affectable
+  
+  type break = Break | Lambda
 
   (* Expressions existantes dans notre langage *)
   (* ~ expression de l'AST syntaxique où les noms des identifiants ont été 
@@ -216,7 +223,9 @@ struct
     | Conditionnelle of expression * bloc * bloc
     | TantQue of expression * bloc
     | Empty (* les nœuds ayant disparus: Const *)
-
+    | Switch of expression * (case list)
+  
+  and case = CaseTid of string * instruction list * break | CaseEntier of int * instruction list * break | CaseTrue of instruction list * break | CaseFalse of instruction list * break | CaseDefault of instruction list * break
 
   (* Structure des fonctions dans notre langage *)
   (* type de retour - informations associées à l'identificateur (dont son nom) - liste des paramètres (association type et information sur les paramètres) - corps de la fonction - expression de retour *)
@@ -234,58 +243,64 @@ end
 module AstType =
 struct
 
-type affectable = Ident of Tds.info_ast | Valeur of affectable
+  type affectable = Ident of Tds.info_ast | Valeur of affectable
 
-(* Opérateurs binaires existants dans Rat - résolution de la surcharge *)
-type binaire = PlusInt | PlusRat | MultInt | MultRat | EquInt | EquBool | Inf | EquEnum
+  (* Opérateurs binaires existants dans Rat - résolution de la surcharge *)
+  type binaire = PlusInt | PlusRat | MultInt | MultRat | EquInt | EquBool | Inf | EquEnum
 
-(* Expressions existantes dans Rat *)
-(* = expression de AstTds *)
-type expression =
-  | AppelFonction of Tds.info_ast * expression list
-  | Rationnel of expression * expression
-  | Numerateur of expression
-  | Denominateur of expression
-  | Ident of Tds.info_ast
-  | True
-  | False
-  | Entier of int
-  | Binaire of binaire * expression * expression
-  | Null
-  | Affectable of affectable
-  | New of typ
-  | Adresse of Tds.info_ast
-  | ExpressionEnum of int
+  type break = Break | Lambda
 
-(* instructions existantes Rat *)
-(* = instruction de AstTds + informations associées aux identificateurs, mises à jour *)
-(* + résolution de la surcharge de l'affichage *)
-type bloc = instruction list
- and instruction =
-  | Declaration of expression * Tds.info_ast
-  | Affectation of expression * affectable
-  | AffichageInt of expression
-  | AffichageRat of expression
-  | AffichageBool of expression
-  | Conditionnelle of expression * bloc * bloc
-  | TantQue of expression * bloc
-  | Empty (* les nœuds ayant disparus: Const *)
+  (* Expressions existantes dans Rat *)
+  (* = expression de AstTds *)
+  type expression =
+    | AppelFonction of Tds.info_ast * expression list
+    | Rationnel of expression * expression
+    | Numerateur of expression
+    | Denominateur of expression
+    | Ident of Tds.info_ast
+    | True
+    | False
+    | Entier of int
+    | Binaire of binaire * expression * expression
+    | Null
+    | Affectable of affectable
+    | New of typ
+    | Adresse of Tds.info_ast
+    | ExpressionEnum of int
 
-(* informations associées à l'identificateur (dont son nom), liste des paramètres, corps, expression de retour *)
-type fonction = Fonction of Tds.info_ast * Tds.info_ast list * instruction list * expression 
+  (* instructions existantes Rat *)
+  (* = instruction de AstTds + informations associées aux identificateurs, mises à jour *)
+  (* + résolution de la surcharge de l'affichage *)
+  type bloc = instruction list
+  and instruction =
+    | Declaration of expression * Tds.info_ast
+    | Affectation of expression * affectable
+    | AffichageInt of expression
+    | AffichageRat of expression
+    | AffichageBool of expression
+    | Conditionnelle of expression * bloc * bloc
+    | TantQue of expression * bloc
+    | Empty (* les nœuds ayant disparus: Const *)
+    | Switch of expression * (case list)
 
-(* Structure d'un programme dans notre langage *)
-type programme = Programme of fonction list * bloc
+  and case = CaseTid of expression * instruction list * break | CaseEntier of int * instruction list * break | CaseTrue of instruction list * break | CaseFalse of instruction list * break | CaseDefault of instruction list * break
 
-let taille_variables_declarees i = 
-  match i with
-  | Declaration (_,info) -> 
-    begin
-    match Tds.info_ast_to_info info with
-    | InfoVar (_,t,_,_) -> getTaille t
-    | _ -> failwith "internal error"
-    end
-  | _ -> 0 ;;
+
+  (* informations associées à l'identificateur (dont son nom), liste des paramètres, corps, expression de retour *)
+  type fonction = Fonction of Tds.info_ast * Tds.info_ast list * instruction list * expression 
+
+  (* Structure d'un programme dans notre langage *)
+  type programme = Programme of fonction list * bloc
+
+  let taille_variables_declarees i = 
+    match i with
+    | Declaration (_,info) -> 
+      begin
+      match Tds.info_ast_to_info info with
+      | InfoVar (_,t,_,_) -> getTaille t
+      | _ -> failwith "internal error"
+      end
+    | _ -> 0 ;;
 
 end
 
@@ -295,21 +310,21 @@ end
 module AstPlacement =
 struct
 
-(* Expressions existantes dans notre langage *)
-(* = expression de AstType  *)
-type expression = AstType.expression
+  (* Expressions existantes dans notre langage *)
+  (* = expression de AstType  *)
+  type expression = AstType.expression
 
-(* instructions existantes dans notre langage *)
-(* = instructions de AstType  *)
-type bloc = instruction list
- and instruction = AstType.instruction
+  (* instructions existantes dans notre langage *)
+  (* = instructions de AstType  *)
+  type bloc = instruction list
+  and instruction = AstType.instruction
 
-(* informations associées à l'identificateur (dont son nom), liste de paramètres, corps, expression de retour *)
-(* Plus besoin de la liste des paramètres mais on la garde pour les tests du placements mémoire *)
-type fonction = Fonction of Tds.info_ast * Tds.info_ast list * instruction list * expression
+  (* informations associées à l'identificateur (dont son nom), liste de paramètres, corps, expression de retour *)
+  (* Plus besoin de la liste des paramètres mais on la garde pour les tests du placements mémoire *)
+  type fonction = Fonction of Tds.info_ast * Tds.info_ast list * instruction list * expression
 
-(* Structure d'un programme dans notre langage *)
-type programme = Programme of fonction list * bloc
+  (* Structure d'un programme dans notre langage *)
+  type programme = Programme of fonction list * bloc
 
 end
 

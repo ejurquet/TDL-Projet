@@ -35,10 +35,37 @@ struct
         analyse_placement_bloc b base reg;
         0
       end
+	| Switch (_ ,cl) ->
+	 (* Analyse de l expression comparee *)
+	 let _ = analyse_placement_listcase cl base reg in
+      0
     | _ -> 0
-
+and analyse_placement_listcase cl base reg  =
+		 let _ = List.map (analyse_placement_case base reg) cl in ()
+and analyse_placement_case base reg case=
+	match case with
+		| CaseTid(_,il,_) -> 
+			begin
+				analyse_placement_bloc il base reg;
+			end
+		| CaseEntier(_,il,_) -> 
+			begin
+				analyse_placement_bloc il base reg;
+			end
+		| CaseTrue (il,_) -> 
+			begin
+				analyse_placement_bloc il base reg;
+			end
+		| CaseFalse (il,_) -> 
+			begin
+				analyse_placement_bloc il base reg;
+			end
+		| CaseDefault(il,_) -> 
+			begin
+				analyse_placement_bloc il base reg;
+			end
     
-  and analyse_placement_bloc li base reg =
+and analyse_placement_bloc li base reg =
     let _ = List.fold_left (fun t qt -> t + (analyse_placement_instruction qt t reg)) base li in ()
 
     (* Solution alternative : 

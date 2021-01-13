@@ -268,7 +268,46 @@ let exprenum_toint (e) (v) =
         begin
           Empty
         end
-  
+	| AstTds.Switch (expr ,cl) ->
+	 (* Analyse de l expression comparee *)
+      let (nc, tc) = analyse_type_expression tpEnums expr in
+      (* Analyse du bloc *)
+      let ncl = analyse_type_listcase tpEnums tc cl  in
+      (* Renvoie la nouvelle structure de la boucle *)
+	  Switch(nc,ncl)
+and analyse_type_listcase tpEnums tc cl  =
+		List.map (analyse_type_case tpEnums tc) cl
+and analyse_type_case tpEnums tc case =
+	match case with
+		| AstTds.CaseTid(s,il,b) -> 
+			begin
+				let (ex,t) = (analyse_type_expression tpEnums (AstTds.ExpressionEnum(s))) in
+				  if est_compatible t tc then CaseTid(ex,List.map(analyse_type_instruction tpEnums) il,analyse_type_break b)
+				  else raise (TypeInattendu(t, tc))
+			end
+		| AstTds.CaseEntier(i,il,b) -> 
+			begin
+				if est_compatible tc Int then CaseEntier(i,List.map(analyse_type_instruction tpEnums) il,analyse_type_break b)
+				else raise (TypeInattendu(Int,tc))
+			end
+		| AstTds.CaseTrue (il,b) -> 
+			begin
+				if est_compatible tc Bool then CaseTrue(List.map(analyse_type_instruction tpEnums) il,analyse_type_break b)
+				else raise (TypeInattendu(Bool, tc))
+			end
+		| AstTds.CaseFalse (il,b) -> 
+			begin
+				if est_compatible tc Bool then CaseFalse(List.map(analyse_type_instruction tpEnums) il,analyse_type_break b)
+				else raise (TypeInattendu(Bool,tc))
+			end
+		| AstTds.CaseDefault(il,b) -> 
+			begin
+				CaseDefault(List.map(analyse_type_instruction tpEnums) il,analyse_type_break b)
+			end
+and analyse_type_break b =
+	match b with
+	|AstTds.Break -> Break
+	|AstTds.Lambda -> Lambda
 
   let analyse_type_fonction tpEnums (AstTds.Fonction(t, _, infoseule, lp, li, e)) =
 	let ltypeparam = List.map(fst) lp

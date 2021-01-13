@@ -41,6 +41,11 @@ open Ast.AstSyntax
 %token ADRESSE
 %token EOF
 %token ENUM
+%token SWITCH
+%token CASE
+%token BREAK
+%token DPTS
+%token DEFAULT
 
 
 (* Type de l'attribut synthétisé des non-terminaux *)
@@ -57,6 +62,9 @@ open Ast.AstSyntax
 %type <string list> idents
 %type <typ> enum
 %type <typ list> enums
+%type <break> brk
+%type <case list> lcase
+%type <case> cas
 (* Type et définition de l'axiome *)
 %start <Ast.AstSyntax.programme> main
 
@@ -83,6 +91,7 @@ i :
 | PRINT e1=e PV                     {Affichage (e1)}
 | IF exp=e li1=bloc ELSE li2=bloc   {Conditionnelle (exp,li1,li2)}
 | WHILE exp=e li=bloc               {TantQue (exp,li)}
+| SWITCH PO econd = e PF AO lc = lcase AF {Switch(econd, lc)}
 
 dp :
 |                         {[]}
@@ -133,3 +142,18 @@ enums :
 |                         {[]}
 | i1=enum li=enums              {i1::li}
 
+
+brk :
+|          {Lambda}
+| BREAK PV   {Break}
+
+lcase :
+|                         {[]}
+| i1=cas li=lcase              {i1::li}
+
+cas :
+| CASE TRUE DPTS ins = is b = brk {CaseTrue(ins,b)}
+| CASE FALSE DPTS ins = is b = brk {CaseFalse(ins,b)}
+| CASE inte = ENTIER DPTS ins = is b = brk {CaseEntier (inte,ins,b)}
+| CASE tid = TID DPTS ins = is b = brk {CaseTid(tid,ins,b)}
+| DEFAULT DPTS ins = is b = brk {CaseDefault(ins,b)}

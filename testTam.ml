@@ -152,3 +152,20 @@ let%expect_test "enum_0" =
 let%expect_test "enum_pointeur" =
   runtam "../../fichiersRat/src-rat-enum-test/test_enum_pointeur.rat";
   [%expect{| truetrue |}]
+
+let%expect_test "switch_enum" =
+  runtam "../../fichiersRat/src-rat-switch-test/test_switch_enum.rat";
+  [%expect{| 19 |}]
+
+let%expect_test "switch_exemple2" =
+  runtam "../../fichiersRat/src-rat-switch-test/test_switch_exemple2.rat";
+  [%expect{| 427878372096 |}]
+
+let%expect_test "switch_expression-complexe" =
+  runtam "../../fichiersRat/src-rat-switch-test/test_switch_expression-complexe.rat";
+  [%expect{| 427878372096 |}]
+
+let%expect_test "combi_sujet" =
+  runtam "../../fichiersRat/src-rat-combinaison-test/test_combi_sujet.rat";
+  [%expect{| [15/1][8/12][8/1][15/1][8/1][15/2] |}]
+  

@@ -46,7 +46,7 @@ int permute (Mois* p1 Mois* p2) {
     return 0;
 }
 
-bool ordonne (int* d1 Mois* m1 int* d2 Mois* m2) {
+bool ordonne (int* d1 Mois* m1 int* d2 Mois* m2) {
     bool modif = false;
     switch (call compare ((*m1)(*m2))){
         case Gt :

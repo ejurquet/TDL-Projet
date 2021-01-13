@@ -179,7 +179,65 @@ struct
           ^ lfinelse ^ "\n"
         end
       | Empty -> ""
-    
+	    | AstType.Switch(e, lc) -> analyse_code_listcase lc e
+      
+and analyse_code_listcase lc e= 
+	(*dernier label du switch*)
+    let labFinTotale = getEtiquette() in
+        let funFold case (st, debs) = 
+          let (s, d) = analyse_code_case labFinTotale e case debs in
+          (s ^ st, d) in
+        (* String.concat "" (List.map (analyse_code_case labFinTotale e ) lc) *)
+        let (stringRes, _) = List.fold_right funFold lc ("", labFinTotale) in
+					(*indiquer la sortie du switch*)
+					stringRes ^ labFinTotale ^ "\n"
+and analyse_code_case labFinTotale e c labDebutSuivant =
+  (*label du début du case*)
+  let labDebutCase = getEtiquette() in
+  (*label de la fin du case*)
+	let labFinCase = getEtiquette() in 
+  let stringRetour = analyse_code_expression e ^ (analyse_cond_saut_switch labFinCase c) ^ labDebutCase ^ "\n"
+    ^ (analyse_bloc_switch c) ^ (analyse_code_break labFinTotale c labDebutSuivant) ^ labFinCase ^ "\n"
+  in (stringRetour, labDebutCase)
+
+and analyse_cond_saut_switch labFinCase c =
+	match c with
+    | AstType.CaseEntier(v,_, _) -> "LOADL " ^ (string_of_int v) ^ "\n" ^ "SUBR IEq\n" ^ "JUMPIF (0) " ^ labFinCase ^ "\n"
+    | AstType.CaseTid(ve,_,_) -> 
+        begin
+          let v = 
+            match ve with
+            | ExpressionEnum vi -> vi
+            | _ -> failwith "Erreur interne"
+          in 
+          "LOADL " ^ (string_of_int v) ^ "\n" ^ "SUBR IEq\n" ^ "JUMPIF (0) " ^ labFinCase ^ "\n"
+        end
+    | AstType.CaseTrue(_, _) -> "LOADL 1\n" ^ "SUBR IEq\n" ^ "JUMPIF (0) " ^ labFinCase ^ "\n"
+    | AstType.CaseFalse(_, _) -> "LOADL 0\n" ^ "SUBR IEq\n" ^ "JUMPIF (0) " ^ labFinCase ^ "\n"
+    | AstType.CaseDefault(_, _) -> ""
+
+and analyse_code_break labFinTotale c labDebutSuivant =
+let b = 
+	match c with
+    | AstType.CaseEntier(_,_, br) -> br
+    | AstType.CaseTid(_,_,br) -> br
+    | AstType.CaseTrue(_, br) -> br
+    | AstType.CaseFalse(_, br) -> br
+    | AstType.CaseDefault(_, br) -> br
+	in
+  if b = AstType.Break then "JUMP " ^ labFinTotale ^ "\n"
+  else "JUMP " ^ labDebutSuivant ^ "\n"
+  
+and analyse_bloc_switch c =
+let b = 
+	match c with
+    | AstType.CaseEntier(_,bl, _) -> bl
+    | AstType.CaseTid(_,bl,_) -> bl
+    | AstType.CaseTrue(bl, _) -> bl
+    | AstType.CaseFalse(bl, _) -> bl
+    | AstType.CaseDefault(bl, _) -> bl
+	in
+	analyse_code_bloc b
 
   (* - Déterminer la taille occupée par les variables locales de ce bloc
    *   (il peut être utile d’introduire une fonction auxiliaire qui donne

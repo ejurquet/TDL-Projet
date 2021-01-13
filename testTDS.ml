@@ -361,28 +361,42 @@ let%test_unit "code_complique" =
 
 let%test_unit "enum_crash_1" = 
   try 
-    let _ = compiler "../../fichiersRat/src-rat-enum-test/test_enum_crash_1.rat" 
+    let _ = compiler "../../fichiersRat/src-rat-enum-test/test_enum_crash_1.rat"
     in raise ErreurNonDetectee
   with
   | EnumIncorrecte -> ()
 
 let%test_unit "enum_crash_2" = 
   try 
-    let _ = compiler "../../fichiersRat/src-rat-enum-test/test_enum_crash_2.rat" 
+    let _ = compiler "../../fichiersRat/src-rat-enum-test/test_enum_crash_2.rat"
     in raise ErreurNonDetectee
   with
   | EnumIncorrecte -> ()
 
 let%test_unit "enum_crash_3" = 
   try 
-    let _ = compiler "../../fichiersRat/src-rat-enum-test/test_enum_crash_3.rat" 
+    let _ = compiler "../../fichiersRat/src-rat-enum-test/test_enum_crash_3.rat"
     in raise ErreurNonDetectee
   with
   | EnumIncorrecte -> ()
 
 let%test_unit "enum_crash_4" = 
   try 
-    let _ = compiler "../../fichiersRat/src-rat-enum-test/test_enum_crash_4.rat" 
+    let _ = compiler "../../fichiersRat/src-rat-enum-test/test_enum_crash_4.rat"
     in raise ErreurNonDetectee
   with
   | TypeBinaireInattendu _ -> ()
+
+let%test_unit "switch_mauvais-type" =
+  try
+    let _ = compiler "../../fichiersRat/src-rat-switch-test/test_switch_mauvais-type.rat"
+    in raise ErreurNonDetectee
+  with
+    | TypeInattendu _ -> ()
+
+let%test_unit "switch_mauvaise-enum" =
+try
+  let _ = compiler "../../fichiersRat/src-rat-switch-test/test_switch_mauvaise-enum.rat"
+  in raise ErreurNonDetectee
+  with
+    | TypeInattendu _ -> ()

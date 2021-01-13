@@ -212,6 +212,27 @@ let rec analyse_tds_instruction tds i =
       let bast = analyse_tds_bloc tds b in
       (* Renvoie la nouvelle structure de la boucle *)
       TantQue (nc, bast)
+  | AstSyntax.Switch (expr, cl) ->
+	 (* Analyse de l expression comparee *)
+      let nexpr = analyse_tds_expression tds expr in
+      (* Analyse du bloc *)
+      let ncl = analyse_tds_listcase tds cl in
+      (* Renvoie la nouvelle structure de la boucle *)
+	  Switch(nexpr,ncl)
+and analyse_tds_listcase tds cl =
+		List.map (analyse_tds_case tds) cl
+and analyse_tds_case tds case =
+	match case with
+		| AstSyntax.CaseTid(s,il,b) -> CaseTid(s,analyse_tds_bloc tds il,analyse_tds_break b)
+		| AstSyntax.CaseEntier(i,il,b) -> CaseEntier(i,analyse_tds_bloc tds il,analyse_tds_break b)
+		| AstSyntax.CaseTrue (il,b) -> CaseTrue(analyse_tds_bloc tds il,analyse_tds_break b)
+		| AstSyntax.CaseFalse (il,b) -> CaseFalse(analyse_tds_bloc tds il,analyse_tds_break b)
+		| AstSyntax.CaseDefault(il,b) -> CaseDefault(analyse_tds_bloc tds il,analyse_tds_break b)
+		
+and analyse_tds_break b =
+	match b with
+	| AstSyntax.Break -> Break
+	| AstSyntax.Lambda -> Lambda
 
       
 (* analyse_tds_bloc : AstSyntax.bloc -> AstTds.bloc *)
