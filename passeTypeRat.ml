@@ -59,7 +59,8 @@ let exprenum_toint (e) (v) =
       begin
         match (analyse_type_affectable aff) with
         | (naf, Pointeur tp) -> (Valeur naf, tp)
-        | _ -> raise (PasUnPointeur "")
+        | _ -> let (_,ts) = analyse_type_affectable aff in
+         raise (PasUnPointeur (string_of_type ts))
       end
 
 
@@ -208,7 +209,7 @@ let exprenum_toint (e) (v) =
       | AstTds.Declaration(t, e, info) -> 
         begin
           let (ne, te) = analyse_type_expression tpEnums e in
-          if te = t then
+          if est_compatible te t then
             begin 
               modifier_type_info t info;
               (Declaration(ne, info))

@@ -1,0 +1,19 @@
+main{
+    int * px = (new int);
+    int ** ppx = &px;
+    int ***pppx = &ppx;
+    int ****ppppx = &pppx;
+    int *****pppppx = &ppppx;
+    int x = 3;
+    px = &x;
+    int y = (*(*(*(*(*pppppx)))));
+    print y;
+    y = (*(*(*(*ppppx))));
+    print y;
+    y = (*(*(*pppx)));
+    print y;
+    y = (*(*ppx));
+    print y;
+    y = (*px);
+    print y;
+}
