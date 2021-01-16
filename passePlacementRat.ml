@@ -11,7 +11,11 @@ struct
 
   type t1 = AstType.programme
   type t2 = AstPlacement.programme
-
+(* analyse_placement_instruction :*)
+(* Paramètre i : l'instruction a placer en memoire *)
+(* Paramètre base : l'e deplacement initial dans le registre *)
+(* Paramètre reg : le registre de travail *)
+(* calcule les deplacements des instructions *)
   let rec analyse_placement_instruction i base reg =
     match i with
     | Declaration(_, info) ->
@@ -40,8 +44,21 @@ struct
 	 let _ = analyse_placement_listcase cl base reg in
       0
     | _ -> 0
+	
+(* analyse_placement_listcase :*)
+(* Paramètre cl : liste de case a placer en memoire *)
+(* Paramètre base : le deplacement initial dans le registre *)
+(* Paramètre reg : le registre de travail *)
+(* calcule les deplacements des case *)
+(*renvoie unit*)
 and analyse_placement_listcase cl base reg  =
 		 let _ = List.map (analyse_placement_case base reg) cl in ()
+(* analyse_placement_case :*)
+(* Paramètre case : lcase a placer en memoire *)
+(* Paramètre base : le deplacement initial dans le registre *)
+(* Paramètre reg : le registre de travail *)
+(* calcule les deplacements du case *)
+(*renvoie unit*)
 and analyse_placement_case base reg case=
 	match case with
 		| CaseTid(_,il,_) -> 
@@ -65,6 +82,13 @@ and analyse_placement_case base reg case=
 				analyse_placement_bloc il base reg;
 			end
     
+	
+(* analyse_placement_bloc :*)
+(* Paramètre li : bloc d'instructions a placer en memoire *)
+(* Paramètre base : le deplacement initial dans le registre *)
+(* Paramètre reg : le registre de travail *)
+(* calcule les deplacements des instructions *)
+(*renvoie unit*)
 and analyse_placement_bloc li base reg =
     let _ = List.fold_left (fun t qt -> t + (analyse_placement_instruction qt t reg)) base li in ()
 
@@ -77,6 +101,12 @@ and analyse_placement_bloc li base reg =
     let _ = List.fold_right (fun t qt -> qt + (analyse_placement_instruction t qt reg)) (List.rev li) base in ()*)
 
 
+
+(* analyse_placement_parametre :*)
+(* Paramètre info : l'info faisant reference au parametre a placer *)
+(* Paramètre base : le deplacement initial dans le registre *)
+(* calcule les deplacement et le placement memoire d'un bloc de parametres *)
+(*renvoie unit*)
   let analyse_placement_parametre info base =
     match info_ast_to_info info with
     | InfoVar(_, t, _, _) ->
@@ -85,10 +115,17 @@ and analyse_placement_bloc li base reg =
       end
     | _ -> failwith ("Erreur interne : erreur placement paramètre.")
 
+(* analyse_placement_parametre :*)
+(* Paramètre info : liste de case a placer en memoire *)
+(* Paramètre base : le deplacement initial dans le registre *)
+(* calcule les deplacement et le placement memoire d'un bloc de parametres *)
+(*renvoie unit*)
     let analyse_placement_parametres lp =
       List.fold_left (fun d p -> d + analyse_placement_parametre p (-d)) 0 (List.rev lp)
 
-
+(* analyse_placement_fonction :*)
+(* Paramètre AstType.Fonction : fonction dont il faut placer les parametres et le corps *)
+(*renvoie unit*)
     let analyse_placement_fonction (AstType.Fonction(info, lp, li, e)) =
       let _ = analyse_placement_parametres lp in
       analyse_placement_bloc li 3 "LB";

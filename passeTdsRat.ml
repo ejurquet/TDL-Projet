@@ -12,7 +12,9 @@ struct
   type t2 = Ast.AstTds.programme
 
 
-  (*Enums *)
+  (*Liste l'entierete des ids contenus dans les enums passées en parametres*)
+  (*Prend en argument une liste de type enum*)
+  (*Renvoie une liste de string*)
 let listeTotaleIds (enums:(typ list)) = 
     let ffold e qt = 
         match e with
@@ -21,6 +23,9 @@ let listeTotaleIds (enums:(typ list)) =
     in
     List.fold_right ffold enums []
 
+  (*Liste l'entierete des noms d'enums contenus dans les enums passées en parametres*)
+  (*Prend en argument une liste de type enum*)
+  (*Renvoie une liste de string*)
 let listeTotaleNomsEnums (enums:(typ list)) = 
     let ffold e qt = 
         match e with
@@ -29,6 +34,9 @@ let listeTotaleNomsEnums (enums:(typ list)) =
     in
     List.fold_right ffold enums []
 
+  (*Indique si chaque element de la liste est unique*)
+  (*Prend en argument une liste de string*)
+  (*Renvoie un booleen*)
 let rec elementsUniques (enums:(string list))= 
   match enums with
   | [] -> true
@@ -38,12 +46,21 @@ let rec elementsUniques (enums:(string list))=
       else elementsUniques q
     end
 
+  (*Indique si les enums passées en parametres sont coherentes entre elles au sens de la passe TDS*)
+  (*Prend en argument une liste de type enum*)
+  (*Renvoie un booleen*)
 let enumsCorrects (enums:(typ list)) =
     let noms = listeTotaleNomsEnums enums in
     let ids = listeTotaleIds enums in 
     ((elementsUniques noms) && (elementsUniques ids))
 
-(* analyse_tds_expression : *)
+(* analyse_tds_affectable : *)
+(* Paramètre tds : la table des symboles courante *)
+(* Paramètre a : l'affectable à analyser *)
+(* Paramètre modif : indique si l'affectable est dans un contexte ou il est modifié *)
+(* Vérifie la bonne utilisation des affectables et tranforme l'expression
+en une expression de type AstTds.expression *)
+(* Erreur si mauvaise utilisation des identifiants *)
 let rec analyse_tds_affectable tds (a:AstSyntax.affectable) modif =
   match a with
   | AstSyntax.Valeur af -> Valeur (analyse_tds_affectable tds af modif)

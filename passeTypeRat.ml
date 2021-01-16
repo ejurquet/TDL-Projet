@@ -12,7 +12,10 @@ struct
   type t1 = AstTds.programme
   type t2 = AstType.programme
   
-
+(*Calcule le type d'une expression d'enum*)
+(*e : expression d'enum a typer*)
+(*enums : ensemble des types d'enums*)
+(*renvoie le type calculé*)
 let type_trouve_exprenum (e) (enums:(typ list)) =
   match e with
   | (AstTds.ExpressionEnum(id)) -> 
@@ -29,6 +32,11 @@ let type_trouve_exprenum (e) (enums:(typ list)) =
     end
   | _ -> failwith "Erreur interne"
 
+(*Calcule l'equivalent entier d'une expression d'enum*)
+(*e : expression d'enum a typer*)
+(*v : type de cette expression*)
+(*renvoie la valeur de l'enum : int*)
+(* Erreur si l'enum n'est pas incluse dans son type *)
 let exprenum_toint (e) (v) =
   match e, v with
   | AstTds.ExpressionEnum(id), TypeEnum(_, lid) ->
@@ -45,7 +53,11 @@ let exprenum_toint (e) (v) =
     end
   | _ -> failwith "Erreur interne"
 
-
+(* analyse_type_affectable : *)
+(* Paramètre af : l'affectable à analyser *)
+(* Vérifie la bonne utilisation des types et calcule le type de l'expression*)
+(*renvoie un tuple de l'affectable traite et de son type*)
+(* Erreur si tentative de prendre la valeur d'autre chose su un pointeur *)
   let rec analyse_type_affectable (af:AstTds.affectable) : (affectable * typ)  =
     match af with
     | Ident info ->
@@ -63,7 +75,12 @@ let exprenum_toint (e) (v) =
          raise (PasUnPointeur (string_of_type ts))
       end
 
-
+(* analyse_type_expression : *)
+(* Paramètre tpEnums : la liste des types des enums *)
+(* Paramètre e : l'expression à analyser *)
+(* Vérifie la bonne utilisation des types et calcule le type de l'expression*)
+(*renvoie un tuple de l'expression traitee et de son type*)
+(* Erreur si types incompatibles *)
   let rec analyse_type_expression tpEnums e =
     match e with
 	     | AstTds.AppelFonction(info, le) ->
@@ -203,7 +220,13 @@ let exprenum_toint (e) (v) =
 			let intCorresp = exprenum_toint (AstTds.ExpressionEnum e) typTrouve in
 			(ExpressionEnum ( intCorresp), typTrouve )
 
-  
+
+(* analyse_type_expression : *)
+(* Paramètre tpEnums : la liste des types des enums *)
+(* Paramètre i : l'instruction à analyser *)
+(* Vérifie la bonne utilisation des types*)
+(*renvoie une instruction analysée*)
+(* Erreur si types incompatibles *)  
   let rec analyse_type_instruction tpEnums i =
     match i with
       | AstTds.Declaration(t, e, info) -> 
@@ -275,8 +298,22 @@ let exprenum_toint (e) (v) =
       let ncl = analyse_type_listcase tpEnums tc cl  in
       (* Renvoie la nouvelle structure de la boucle *)
 	  Switch(nc,ncl)
+	  
+(* analyse_type_listcase : *)
+(* Paramètre tpEnums : la liste des types des enums *)
+(* Paramètre tc : le type de la cible du switch/case *)
+(* Paramètre cl : la liste des case du switch/case *)
+(* Vérifie la bonne utilisation des types*)
+(*renvoie une liste de case traites*)
 and analyse_type_listcase tpEnums tc cl  =
 		List.map (analyse_type_case tpEnums tc) cl
+		
+(* analyse_type_case : *)
+(* Paramètre tpEnums : la liste des types des enums *)
+(* Paramètre tc : le type de la cible du switch/case *)
+(* Paramètre case : le case du switch/case *)
+(* Vérifie la bonne utilisation des types*)
+(*renvoie un de case traite*)
 and analyse_type_case tpEnums tc case =
 	match case with
 		| AstTds.CaseTid(s,il,b) -> 
@@ -304,11 +341,22 @@ and analyse_type_case tpEnums tc case =
 			begin
 				CaseDefault(List.map(analyse_type_instruction tpEnums) il,analyse_type_break b)
 			end
+(* analyse_type_break : *)
+(* Paramètre b : le break a analyser *)
+(* fait remonter le type de break dans les passes*)
+(*renvoie un break traite*)
 and analyse_type_break b =
 	match b with
 	|AstTds.Break -> Break
 	|AstTds.Lambda -> Lambda
 
+(* analyse_type_case : *)
+(* Paramètre tpEnums : la liste des types des enums *)
+(* Paramètre AstTds.Fonction : la fonction a analyser *)
+(* Vérifie la bonne utilisation des types, s'assure que les parametres sont de bon type*)
+(* et que le return est du type annoncé*)
+(*renvoie une Fonction traitee*)
+(* Erreur si types incompatibles *)  
   let analyse_type_fonction tpEnums (AstTds.Fonction(t, _, infoseule, lp, li, e)) =
 	let ltypeparam = List.map(fst) lp
     in modifier_type_fonction_info t ltypeparam infoseule;

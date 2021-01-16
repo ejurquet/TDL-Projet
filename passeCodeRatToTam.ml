@@ -13,7 +13,9 @@ struct
   type t1 = AstPlacement.programme
   type t2 = string
 
-
+ (* type_rec :*)
+(* Paramètre af : l'affectable a traiter *)
+(* calcule le type d'une potentielle suite imbriquée de valeurs(affectable) *)
 	let rec type_rec (af:AstType.affectable) : typ  =
     match af with
     | AstType.Ident info ->
@@ -30,9 +32,15 @@ struct
         | _ -> raise (PasUnPointeur "")
       end
 	  
+	 (* taille_aff :*)
+(* Paramètre af : l'affectable a traiter *)
+(* calcule la taille du type d'une potentielle suite imbriquée de valeurs(affectable) *)
 	let taille_aff (af:AstType.affectable) : int = (getTaille (type_rec af))
 	  
-	  
+ (* analyse_code_affectable :*)
+(* Paramètre af : l'affectable a traiter *)
+(* Paramètre eval_set : indique si l'on est dans un contexte d'evaluation ou de set de variable, true pour eval *)
+(* genere le code de saut pour l'affectable *)
   let rec analyse_code_affectable (af : affectable) eval_set =
     (* pour une évaluation *)
     if eval_set then
@@ -180,7 +188,10 @@ struct
         end
       | Empty -> ""
 	    | AstType.Switch(e, lc) -> analyse_code_listcase lc e
-      
+ (* analyse_code_listcase :*)
+(* Paramètre lc : la liste des case a traiter *)
+(* Paramètre e : la cible du switch case *)
+(* genere le code d'une liste de cas dans un sxitch *)
 and analyse_code_listcase lc e= 
 	(*dernier label du switch*)
     let labFinTotale = getEtiquette() in
@@ -191,6 +202,13 @@ and analyse_code_listcase lc e=
         let (stringRes, _) = List.fold_right funFold lc ("", labFinTotale) in
 					(*indiquer la sortie du switch*)
 					stringRes ^ labFinTotale ^ "\n"
+ (* analyse_code_case :*)
+(* Paramètre c : le case a traiter *)
+(* Paramètre lc : la liste des case du switch *)
+(* Paramètre e : la cible du switch case *)
+(* Paramètre labDebutSuivant : le label du debut (post condition) du case suivant *)
+(* Paramètre labFinTotale : le label de fin du switch/case *)
+(* genere le code d'un cas dans un switch *)
 and analyse_code_case labFinTotale e c labDebutSuivant lc =
   (*label du début du case*)
   let labDebutCase = getEtiquette() in
@@ -200,6 +218,13 @@ and analyse_code_case labFinTotale e c labDebutSuivant lc =
     ^ (analyse_bloc_switch c) ^ (analyse_code_break labFinTotale c labDebutSuivant) ^ labFinCase ^ "\n"
   in (stringRetour, labDebutCase)
 
+ (* analyse_cond_saut_switch :*)
+(* Paramètre c : le case a traiter *)
+(* Paramètre lc : la liste des case du switch *)
+(* Paramètre e : la cible du switch case *)
+(* Paramètre inv : indique si les conditions d'entrée du case sont inversées *)
+(* Paramètre labFinCase : le label de fin du case *)
+(* genere le code de saut pour l'entrée ou non dans un case *)
 and analyse_cond_saut_switch labFinCase c inv lc e=
 	match c with
     | AstType.CaseEntier(v,_, _) -> analyse_code_expression e ^"LOADL " ^ (string_of_int v) ^ "\n" ^ "SUBR IEq\n" ^ "JUMPIF ("^(string_of_int inv)^") " ^ labFinCase ^ "\n"
@@ -218,6 +243,11 @@ and analyse_cond_saut_switch labFinCase c inv lc e=
 			if inv =1 then "" 
 			else String.concat "" (List.map (fun cm -> analyse_cond_saut_switch labFinCase cm 1 lc e) lc)
 
+ (* analyse_code_break :*)
+(* Paramètre c : le case a traiter *)
+(* Paramètre labDebutSuivant : le label du debut (post condition) du case suivant *)
+(* Paramètre labFinTotale : le label de fin du switch/case *)
+(* genere le code de fin du case concernant la presence ou non de break *)
 and analyse_code_break labFinTotale c labDebutSuivant =
 let b = 
 	match c with
@@ -230,6 +260,9 @@ let b =
   if b = AstType.Break then "JUMP " ^ labFinTotale ^ "\n"
   else "JUMP " ^ labDebutSuivant ^ "\n"
   
+ (* analyse_bloc_switch :*)
+ (* Paramètre c : le case a traiter *)
+(* genere le code du bloc contenu dans le case *)
 and analyse_bloc_switch c =
 let b = 
 	match c with
