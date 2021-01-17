@@ -357,9 +357,25 @@ let%test_unit "code_testfuns" =
 let%test_unit "code_complique" = 
   let _ = compiler   "../../fichiersRat/src-rat-tam-test/complique.rat" in ()
 
-  (* Fichiers de tests des enums -> doivent rater la compilation*)
+(* Fichiers de tests de la surcharge -> doivent rater la compilation*)
 
-let%test_unit "enum_crash_1" = 
+let%test_unit "surcharge_crash_1" =
+  try
+    let _ = compiler "../../fichiersRat/src-rat-surcharge-test/test_surcharge_crash_1.rat"
+    in raise ErreurNonDetectee
+  with
+  | DoubleDeclaration("f") -> ()
+
+let%test_unit "surcharge_crash_2" =
+  try
+    let _ = compiler "../../fichiersRat/src-rat-surcharge-test/test_surcharge_crash_2.rat"
+    in raise ErreurNonDetectee
+  with
+  | DoubleDeclaration("f") -> ()
+
+(* Fichiers de tests des enums -> doivent rater la compilation*)
+
+let%test_unit "enum_crash_1" =
   try 
     let _ = compiler "../../fichiersRat/src-rat-enum-test/test_enum_crash_1.rat"
     in raise ErreurNonDetectee
@@ -387,16 +403,18 @@ let%test_unit "enum_crash_4" =
   with
   | TypeBinaireInattendu _ -> ()
 
+(* Fichiers de tests des switch -> doivent rater la compilation*)
+
 let%test_unit "switch_mauvais-type" =
   try
     let _ = compiler "../../fichiersRat/src-rat-switch-test/test_switch_mauvais-type.rat"
     in raise ErreurNonDetectee
   with
-    | TypeInattendu _ -> ()
+  | TypeInattendu _ -> ()
 
 let%test_unit "switch_mauvaise-enum" =
-try
-  let _ = compiler "../../fichiersRat/src-rat-switch-test/test_switch_mauvaise-enum.rat"
-  in raise ErreurNonDetectee
+  try
+    let _ = compiler "../../fichiersRat/src-rat-switch-test/test_switch_mauvaise-enum.rat"
+    in raise ErreurNonDetectee
   with
-    | TypeInattendu _ -> ()
+  | TypeInattendu _ -> ()
